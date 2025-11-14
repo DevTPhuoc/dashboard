@@ -1,0 +1,30 @@
+/* Setting User Page - Minimal CSS, 95% Tailwind */
+
+/* Glassmorphism effects không thể làm với Tailwind */
+.glass-bg {
+  background: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+.glass-input-bg {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.glass-input-bg:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spin {
+  animation: spin 1s linear infinite;
+}

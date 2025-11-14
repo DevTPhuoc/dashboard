@@ -1,0 +1,220 @@
+html,
+body {
+  overflow-x: hidden !important;
+  max-width: 100vw !important;
+}
+
+.sidebar {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  height: 100vh !important;
+  width: 72px !important;
+  background: rgba(5, 5, 5, 0.95) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  transition: width 0.3s ease !important;
+  z-index: 1000 !important;
+  overflow: hidden !important;
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.8) !important;
+}
+
+.sidebar:hover,
+.sidebar.pinned {
+  width: 180px !important;
+}
+
+.sidebar-toggle {
+  position: fixed !important;
+  top: 50% !important;
+  left: 0 !important;
+  transform: translateY(-50%) !important;
+  width: 24px !important;
+  height: 48px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(15px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-left: none !important;
+  border-radius: 0 12px 12px 0 !important;
+  cursor: pointer !important;
+  z-index: 1002 !important;
+  transition: background-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    border-color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+    box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 2px 0 20px rgba(59, 130, 246, 0.2) !important;
+}
+
+.sidebar-toggle:active {
+  transition: transform 0.15s ease !important;
+}
+
+.sidebar.hidden {
+  transform: translateX(-100%) !important;
+}
+
+.sidebar .sidebar-title,
+.sidebar .section-title,
+.sidebar .nav-text,
+.sidebar .pin-button {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateX(-10px) !important;
+  transition: opacity 0.25s ease 0.1s, transform 0.25s ease 0.1s,
+    visibility 0s linear 0.35s !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  max-width: 0 !important;
+  position: absolute !important; /* Remove from layout flow */
+  left: 60px !important; /* Position after icon */
+}
+
+/* Show text when hover or pinned - smooth fade in with proper timing */
+.sidebar:hover .sidebar-title,
+.sidebar:hover .section-title,
+.sidebar:hover .nav-text,
+.sidebar:hover .pin-button,
+.sidebar.pinned .sidebar-title,
+.sidebar.pinned .section-title,
+.sidebar.pinned .nav-text,
+.sidebar.pinned .pin-button {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(0) !important;
+  transition: opacity 0.25s ease 0.1s, transform 0.25s ease 0.1s,
+    visibility 0s linear 0s !important;
+  max-width: 200px !important;
+  position: relative !important; /* Back to normal flow when visible */
+  left: auto !important;
+}
+
+/* Navigation links styling - improved to prevent layout shift */
+.sidebar .nav-link {
+  justify-content: center !important;
+  padding: 12px !important;
+  white-space: nowrap !important;
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 8px !important;
+  margin: 2px 8px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: 1px solid transparent !important;
+  min-height: 44px !important; /* Fixed height to prevent jumping */
+  overflow: hidden !important; /* Prevent text overflow during transition */
+}
+
+/* Nav link hover effect */
+.sidebar .nav-link:hover {
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* When expanded (hover or pinned) - smooth layout change */
+.sidebar:hover .nav-link,
+.sidebar.pinned .nav-link {
+  justify-content: flex-start !important;
+  padding: 10px 12px !important;
+}
+
+/* Header styling - improved transitions */
+.sidebar .sidebar-header {
+  justify-content: center !important;
+  padding: 16px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* When expanded (hover or pinned) */
+.sidebar:hover .sidebar-header,
+.sidebar.pinned .sidebar-header {
+  justify-content: space-between !important;
+  padding: 16px !important;
+}
+
+/* Icons styling - smooth transitions */
+.sidebar .nav-link i {
+  display: block !important;
+  flex-shrink: 0 !important;
+  margin-right: 0 !important;
+  transition: margin-right 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* When expanded (hover or pinned) */
+.sidebar:hover .nav-link i,
+.sidebar.pinned .nav-link i {
+  margin-right: 12px !important;
+}
+
+/* Content layout with responsive margin */
+.main-content {
+  margin-left: 72px !important;
+  transition: margin-left 0.3s ease !important;
+  min-height: 100vh !important;
+  width: calc(100vw - 72px) !important;
+  max-width: calc(100vw - 72px) !important; /* Prevent overflow */
+  overflow-x: hidden !important; /* Hide horizontal scrollbar */
+}
+
+.sidebar:hover ~ .main-content,
+.sidebar.pinned ~ .main-content {
+  margin-left: 180px !important;
+  width: calc(100vw - 180px) !important;
+  max-width: calc(100vw - 180px) !important; /* Prevent overflow */
+}
+
+/* Higher specificity for hidden sidebar - overrides pinned state */
+.sidebar.hidden ~ .main-content,
+.sidebar.hidden.pinned ~ .main-content,
+.main-content.sidebar-hidden {
+  margin-left: 0 !important;
+  width: 100vw !important;
+  max-width: 100vw !important; /* Prevent overflow */
+}
+
+/* Responsive iframe content */
+.main-content .content iframe {
+  width: 100% !important;
+  height: calc(100vh - 55px) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+}
+
+.toggle-bg {
+  position: absolute !important;
+  inset: 0 !important;
+  background: linear-gradient(
+    135deg,
+    rgba(59, 130, 246, 0.05),
+    rgba(147, 51, 234, 0.03)
+  ) !important;
+  border-radius: 0 12px 12px 0 !important;
+  opacity: 0 !important;
+  transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+}
+
+.sidebar-toggle:hover .toggle-bg {
+  opacity: 1 !important;
+}
+
+.toggle-icon {
+  font-size: 12px !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  transition: color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  z-index: 2 !important;
+  position: relative !important;
+  margin-left: 1px !important;
+}
+
+.sidebar-toggle:hover .toggle-icon {
+  color: rgba(59, 130, 246, 0.9) !important;
+}

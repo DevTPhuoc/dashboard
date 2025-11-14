@@ -1,0 +1,77 @@
+/* Menu Dropdown Styles */
+
+/* Dropdown menu styles */
+.dropdown-menu {
+  position: absolute !important;
+  z-index: 9999 !important;
+  left: 100% !important;
+  top: 0 !important;
+  margin-left: 8px !important;
+}
+
+.dropdown-menu.show {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateX(0) !important;
+}
+
+/* User dropdown specific styles */
+.user-dropdown .dropdown-menu {
+  position: absolute !important;
+  right: 0 !important;
+  left: auto !important;
+  top: 100% !important;
+  margin-left: 0 !important;
+  margin-top: 8px !important;
+  transform: translateY(-8px) !important;
+}
+
+.user-dropdown .dropdown-menu.show,
+.user-dropdown.open .dropdown-menu {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
+}
+
+/* Dropdown container styles */
+.dropdown-container {
+  position: relative;
+}
+
+.children-menu {
+  margin-left: 1.5rem;
+  margin-top: 0.25rem;
+}
+
+.children-menu.hidden {
+  display: none;
+}
+
+/* Chevron animation */
+.chevron {
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Ensure sidebar doesn't interfere */
+.sidebar {
+  z-index: 1000;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar ::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.5);
+  border-radius: 3px;
+}
+
+.sidebar ::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.5);
+  border-radius: 3px;
+}
+
+.sidebar ::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}

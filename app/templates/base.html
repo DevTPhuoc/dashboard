@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Equipment{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Sidebar CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/sidebar.css') }}"
+    />
+    <!-- Menu Dropdown CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/components/menu-dropdown.css') }}"
+    />
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#0ea5e9",
+              secondary: "#8b5cf6",
+              accent: "#ec4899",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body class="bg-black text-white">
+    <!-- Arrow Toggle Button -->
+    <button class="sidebar-toggle group" id="sidebarToggle">
+      <div class="toggle-bg"></div>
+      <i class="fas fa-chevron-right toggle-icon"></i>
+    </button>
+
+    <!-- Hover Sidebar with Pin -->
+    <nav class="sidebar" id="sidebar">
+      <!-- Sidebar Header -->
+      <div
+        class="sidebar-header flex items-center justify-center h-16 px-2 border-b border-gray-800 bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-sm"
+      >
+        <div
+          class="sidebar-title font-bold text-xl flex-1 text-center bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent whitespace-nowrap"
+        >
+          Menu
+        </div>
+        <button
+          class="pin-button w-8 h-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-gray-400 hover:text-blue-400 hover:border-blue-400 transition-all"
+          id="pinButton"
+        >
+          <i
+            class="fas fa-thumbtack text-sm"
+            style="transform: rotate(45deg)"
+          ></i>
+        </button>
+      </div>
+
+      <!-- Sidebar Content -->
+      <div class="p-2 space-y-6 overflow-y-auto h-full">
+        <!-- Navigation Menu - Dynamic from API -->
+        <div>
+          <h3
+            class="section-title text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-2"
+          >
+            Menu Chính
+          </h3>
+          <div class="space-y-1" id="dynamic-menu">
+            <!-- Default Dashboard Link -->
+            <a
+              href="#"
+              onclick="loadPage('/dashboard/sl')"
+              class="nav-link group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-200"
+            >
+              <i
+                class="fas fa-home w-5 h-5 mr-3 text-blue-400 flex-shrink-0"
+              ></i>
+              <span class="nav-text whitespace-nowrap">Trang chủ</span>
+            </a>
+            <!-- Dynamic menu items will be loaded here -->
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+      <!-- Header -->
+      <header
+        class="header flex items-center justify-between px-4 border-b border-gray-500"
+      >
+        <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg"
+            >
+              <i class="fas fa-chart-line text-white text-lg"></i>
+            </div>
+            <div>
+              <h1
+                class="text-xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
+              >
+                Equipment Control
+              </h1>
+              <p class="text-xs text-gray-400">
+                Professional Analytics Platform
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Center DateTime Display -->
+        <div class="absolute left-1/2 transform -translate-x-1/2"></div>
+
+        <div class="flex items-center space-x-2">
+          <!-- System Status -->
+          <div class="relative group mr-4">
+            <div class="shadow-lg hover:shadow-xl transition-all duration-300">
+              <div class="flex items-center space-x-4">
+                <!-- Date with Calendar Icon -->
+                <div class="flex items-center space-x-2">
+                  <div class="relative">
+                    <i class="fas fa-calendar-alt text-cyan-400 text-lg"></i>
+                  </div>
+                  <div
+                    id="current-date"
+                    class="text-base font-mono font-semibold bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent tracking-wide"
+                  ></div>
+                </div>
+
+                <!-- Separator -->
+                <div class="text-slate-400 text-lg font-bold select-none">
+                  |
+                </div>
+
+                <!-- Time with Clock Icon -->
+                <div class="flex items-center space-x-2">
+                  <div class="relative">
+                    <i class="fas fa-clock text-purple-400 text-lg"></i>
+                  </div>
+                  <div
+                    id="current-time"
+                    class="text-base font-mono font-semibold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent tracking-wide"
+                  ></div>
+                </div>
+              </div>
+            </div>
+            <!-- Subtle glow effect -->
+            <div
+              class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"
+            ></div>
+          </div>
+          <div
+            class="hidden lg:flex items-center space-x-2 bg-emerald-900/30 border border-emerald-600/30 rounded-lg px-3 py-2 hover:bg-emerald-900/40 transition-all"
+          >
+            <div class="relative">
+              <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+              <div
+                class="absolute inset-0 w-2 h-2 bg-emerald-400 rounded-full animate-ping opacity-75"
+              ></div>
+            </div>
+            <span class="text-xs text-emerald-300 font-medium"
+              >System Online</span
+            >
+          </div>
+
+          <!-- User Dropdown -->
+          <div class="user-dropdown relative">
+            <button
+              class="user-button flex items-center space-x-2 bg-gradient-to-r from-white/5 to-white/10 border border-white/10 rounded-lg px-4 py-1 hover:bg-gradient-to-r hover:from-white/10 hover:to-white/15 hover:border-blue-400 transition-all group"
+            >
+              <div
+                class="user-avatar w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 flex items-center justify-center text-white text-sm font-bold shadow-lg"
+              >
+                {% if current_user.is_authenticated %}{{
+                current_user.username[0].upper() }}{% else %}A{% endif %}
+              </div>
+              <div class="user-info text-left hidden sm:block">
+                <div
+                  class="user-name text-sm font-semibold text-white group-hover:text-blue-100 transition-colors"
+                >
+                  {% if current_user.is_authenticated %}{{ current_user.username
+                  }}{% else %}Admin User{% endif %}
+                </div>
+                <!-- <div
+                  class="user-role text-xs text-gray-400 group-hover:text-gray-300 transition-colors"
+                >
+                  Quản trị viên
+                </div> -->
+              </div>
+              <i
+                class="fas fa-chevron-down dropdown-icon text-gray-400 text-sm transition-all group-hover:text-blue-400"
+              ></i>
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div
+              class="dropdown-menu bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl py-3 opacity-0 invisible transition-all duration-200 shadow-2xl w-56"
+            >
+              <div class="px-4 py-3 border-b border-white/10">
+                <p class="text-sm font-semibold text-white">
+                  {% if current_user.is_authenticated %}{{ current_user.username
+                  }}{% else %}Admin User{% endif %}
+                </p>
+                <p class="text-xs text-gray-400">admin@dashboard.com</p>
+              </div>
+
+              <div class="py-2">
+                <a
+                  href="#"
+                  class="dropdown-item flex items-center px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors group"
+                >
+                  <i
+                    class="fas fa-user-circle w-5 h-5 mr-3 text-blue-400 group-hover:text-blue-300"
+                  ></i>
+                  Hồ sơ cá nhân
+                </a>
+
+                <!-- thêm cài đặt trang cá nhân -->
+                <a
+                  href="#"
+                  onclick="loadPage('/user_setting')"
+                  class="dropdown-item flex items-center px-4 py-2.5 text-sm text-gray-300 hover:text-white hover:bg-white/5 transition-colors group"
+                >
+                  <i
+                    class="fas fa-cog w-5 h-5 mr-3 text-blue-400 group-hover:text-blue-300"
+                  ></i>
+                  Cài đặt
+                </a>
+
+                <a
+                  href="/logout"
+                  class="dropdown-item flex items-center px-4 py-2.5 text-sm text-gray-300 hover:text-red-400 hover:bg-red-500/10 transition-colors group"
+                >
+                  <i
+                    class="fas fa-sign-out-alt w-5 h-5 mr-3 text-red-400 group-hover:text-red-300"
+                  ></i>
+                  Đăng xuất
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="content">
+        <div
+          class="loading-overlay fixed inset-0 bg-black/50 backdrop-blur-sm items-center justify-center z-50"
+          style="display: none"
+        >
+          <div
+            class="bg-white/10 backdrop-blur-xl rounded-2xl p-8 flex items-center space-x-4"
+          >
+            <div
+              class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"
+            ></div>
+            <span class="text-white font-medium">Đang tải...</span>
+          </div>
+        </div>
+
+        <!-- Iframe với scrollbar mặc định -->
+        <div class="w-full bg-transparent" style="height: calc(100vh - 4rem)">
+          <iframe
+            id="contentFrame"
+            src="/dashboard/sl"
+            class="w-full h-full border-0"
+            frameborder="0"
+          ></iframe>
+        </div>
+
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+
+    <script>
+      // Pass server-side data to JavaScript
+      window.userConfig = {
+        isAdmin: {% if current_user.is_authenticated and current_user.role and current_user.role.name == 'admin' %}true{% else %}false{% endif %}
+      };
+
+      // Real-time clock update with separate date and time display
+      function updateDateTime() {
+        const now = new Date();
+        const dateElement = document.getElementById('current-date');
+        const timeElement = document.getElementById('current-time');
+
+        if (dateElement && timeElement) {
+          // Format date: "05/09/2025"
+          const day = String(now.getDate()).padStart(2, '0');
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const year = now.getFullYear();
+          const formattedDate = `${day}/${month}/${year}`;
+
+          // Format time: "14:32:15"
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          const seconds = String(now.getSeconds()).padStart(2, '0');
+          const formattedTime = `${hours}:${minutes}:${seconds}`;
+
+          dateElement.textContent = formattedDate;
+          timeElement.textContent = formattedTime;
+        }
+      }
+
+      // Initialize when DOM is loaded
+      document.addEventListener('DOMContentLoaded', function() {
+        updateDateTime();
+
+        // Update time every second
+        setInterval(updateDateTime, 1000);
+      });
+    </script>
+
+    <!-- JavaScript Files -->
+    <script src="{{ url_for('static', filename='js/utils/helpers.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/sidebar.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/dynamic-menu.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/device.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Thiết bị</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        success: '#22c55e',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        dark: '#1e293b',
+                        light: '#f8fafc'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .sidebar {
+            width: 250px;
+            transition: all 0.3s;
+        }
+        .main-content {
+            margin-left: 250px;
+            transition: all 0.3s;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                margin-left: -250px;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                margin-left: 0;
+            }
+        }
+        .device-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .modal {
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .table-row:hover {
+            background-color: #f1f5f9;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+        .nav-item.active {
+            background-color: rgba(37, 99, 235, 0.1);
+            color: #2563eb;
+            border-left: 4px solid #2563eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col min-h-screen">
+    <!-- Header Component -->
+    <header class="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+        <div class="flex items-center">
+            <button id="sidebarToggle" class="text-gray-600 mr-4 md:hidden">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            <h1 class="text-xl font-bold text-primary">Hệ thống Quản lý Thiết bị</h1>
+        </div>
+        <div class="flex items-center space-x-4">
+            <button class="text-gray-600 relative">
+                <i class="fas fa-bell text-xl"></i>
+                <span class="absolute -top-1 -right-1 bg-danger text-white rounded-full w-4 h-4 text-xs flex items-center justify-center">3</span>
+            </button>
+            <div class="relative">
+                <button class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">A</div>
+                    <span class="hidden md:inline">Admin</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex flex-1">
+        <!-- Sidebar Component -->
+        <aside class="sidebar fixed h-full bg-dark text-white z-10">
+            <div class="p-4 border-b border-gray-700">
+                <h2 class="text-lg font-semibold">Công ty ABC</h2>
+            </div>
+            <nav class="p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="nav-item flex items-center p-2 rounded-lg hover:bg-blue-700" data-page="dashboard">
+                            <i class="fas fa-tachometer-alt w-5 mr-3"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center p-2 rounded-lg hover:bg-blue-700 active" data-page="devices">
+                            <i class="fas fa-laptop w-5 mr-3"></i>
+                            <span>Thiết bị</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center p-2 rounded-lg hover:bg-blue-700" data-page="repair-requests">
+                            <i class="fas fa-tools w-5 mr-3"></i>
+                            <span>Yêu cầu sửa chữa</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center p-2 rounded-lg hover:bg-blue-700" data-page="repair-history">
+                            <i class="fas fa-history w-5 mr-3"></i>
+                            <span>Lịch sử sửa chữa</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="nav-item flex items-center p-2 rounded-lg hover:bg-blue-700" data-page="settings">
+                            <i class="fas fa-cog w-5 mr-3"></i>
+                            <span>Cài đặt</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content flex-1 p-6">
+            <!-- Dashboard Page Component -->
+            <div id="dashboard" class="page">
+                <!-- Dashboard content will be loaded here -->
+            </div>
+
+            <!-- Devices Page Component -->
+            <div id="devices" class="page active">
+                <!-- Devices content will be loaded here -->
+            </div>
+
+            <!-- Repair Requests Page Component -->
+            <div id="repair-requests" class="page">
+                <!-- Repair requests content will be loaded here -->
+            </div>
+
+            <!-- Repair History Page Component -->
+            <div id="repair-history" class="page">
+                <!-- Repair history content will be loaded here -->
+            </div>
+
+            <!-- Settings Page Component -->
+            <div id="settings" class="page">
+                <!-- Settings content will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Device Detail Modal Component -->
+    <div id="deviceDetailModal" class="fixed inset-0 z-50 hidden">
+        <!-- Modal content will be loaded here -->
+    </div>
+
+    <!-- Report Issue Modal Component -->
+    <div id="reportIssueModal" class="fixed inset-0 z-50 hidden">
+        <!-- Report issue content will be loaded here -->
+    </div>
+
+    <!-- Add Device Modal Component -->
+    <div id="addDeviceModal" class="fixed inset-0 z-50 hidden">
+        <!-- Add device form will be loaded here -->
+    </div>
+
+    <!-- Script for component management -->
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Component templates
+        const components = {
+            dashboard: `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
+                    <p class="text-gray-600">Tổng quan về hệ thống thiết bị công ty</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                                <i class="fas fa-laptop text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600">Tổng thiết bị</p>
+                                <h3 class="text-2xl font-bold" id="total-devices">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600">
+                                <i class="fas fa-check-circle text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600">Đang hoạt động</p>
+                                <h3 class="text-2xl font-bold" id="active-devices">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                <i class="fas fa-tools text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600">Đang bảo trì</p>
+                                <h3 class="text-2xl font-bold" id="maintenance-devices">0</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-100 text-red-600">
+                                <i class="fas fa-exclamation-triangle text-xl"></i>
+                            </div>
+                            <div class="ml-4">
+                                <p class="text-gray-600">Hư hỏng</p>
+                                <h3 class="text-2xl font-bold" id="broken-devices">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activities -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b">
+                            <h3 class="text-lg font-semibold">Hoạt động gần đây</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4" id="recent-activities">
+                                <!-- Recent activities will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b">
+                            <h3 class="text-lg font-semibold">Yêu cầu chờ xử lý</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4" id="pending-requests">
+                                <!-- Pending requests will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            devices: `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Quản lý Thiết bị</h2>
+                    <p class="text-gray-600">Danh sách toàn bộ thiết bị trong công ty</p>
+                </div>
+
+                <!-- Filters and Search -->
+                <div class="bg-white rounded-lg shadow p-4 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+                        <div class="relative flex-1 max-w-md">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" placeholder="Tìm kiếm thiết bị..." class="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-primary" id="searchInput">
+                        </div>
+                        <div class="flex space-x-2">
+                            <select class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary" id="statusFilter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="active">Hoạt động tốt</option>
+                                <option value="maintenance">Đang bảo trì</option>
+                                <option value="broken">Hư hỏng</option>
+                                <option value="inactive">Ngừng hoạt động</option>
+                            </select>
+                            <select class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary" id="departmentFilter">
+                                <option value="">Tất cả phòng ban</option>
+                                <option value="engineering">Kỹ thuật</option>
+                                <option value="sales">Kinh doanh</option>
+                                <option value="hr">Nhân sự</option>
+                                <option value="accounting">Kế toán</option>
+                            </select>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center" onclick="showAddDeviceModal()">
+                                <i class="fas fa-plus mr-2"></i> Thêm thiết bị
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6" id="device-cards">
+                    <!-- Device cards will be loaded here -->
+                </div>
+
+                <!-- Device Table -->
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Danh sách thiết bị</h3>
+                        <div class="flex space-x-2">
+                            <button class="text-gray-500 hover:text-gray-700" id="filterButton">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-700" id="sortButton">
+                                <i class="fas fa-sort"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã thiết bị</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên thiết bị</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Loại</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng ban</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người dùng</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="devices-table-body">
+                                <!-- Devices table rows will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t flex justify-between items-center">
+                        <div class="text-sm text-gray-500" id="devices-pagination-info">
+                            Hiển thị 0 đến 0 của 0 thiết bị
+                        </div>
+                        <div class="flex space-x-2" id="devices-pagination">
+                            <!-- Pagination will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            repairRequests: `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Yêu cầu sửa chữa</h2>
+                    <p class="text-gray-600">Duyệt và xử lý các yêu cầu sửa chữa thiết bị</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Danh sách yêu cầu</h3>
+                        <div class="flex space-x-2">
+                            <select class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary" id="requestStatusFilter">
+                                <option value="">Tất cả trạng thái</option>
+                                <option value="pending">Chờ duyệt</option>
+                                <option value="approved">Đã duyệt</option>
+                                <option value="in_progress">Đang sửa chữa</option>
+                                <option value="completed">Đã hoàn thành</option>
+                                <option value="rejected">Đã từ chối</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã yêu cầu</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người yêu cầu</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày yêu cầu</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô tả</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="repair-requests-table-body">
+                                <!-- Repair requests will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t flex justify-between items-center">
+                        <div class="text-sm text-gray-500" id="requests-pagination-info">
+                            Hiển thị 0 đến 0 của 0 yêu cầu
+                        </div>
+                        <div class="flex space-x-2" id="requests-pagination">
+                            <!-- Pagination will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            repairHistory: `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Lịch sử sửa chữa</h2>
+                    <p class="text-gray-600">Theo dõi lịch sử sửa chữa và bảo trì thiết bị</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-lg font-semibold">Lịch sử sửa chữa</h3>
+                        <div class="flex space-x-2">
+                            <select class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary" id="historyDeviceFilter">
+                                <option value="">Tất cả thiết bị</option>
+                                <!-- Device options will be loaded here -->
+                            </select>
+                            <input type="month" class="border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary" id="historyMonthFilter" value="2023-09">
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã sửa chữa</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thiết bị</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày bắt đầu</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày hoàn thành</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kỹ thuật viên</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô tả</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chi phí</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="repair-history-table-body">
+                                <!-- Repair history will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="px-6 py-4 border-t flex justify-between items-center">
+                        <div class="text-sm text-gray-500" id="history-pagination-info">
+                            Hiển thị 0 đến 0 của 0 bản ghi
+                        </div>
+                        <div class="flex space-x-2" id="history-pagination">
+                            <!-- Pagination will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            settings: `
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Cài đặt hệ thống</h2>
+                    <p class="text-gray-600">Quản lý cài đặt và cấu hình hệ thống</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="border-b">
+                        <nav class="flex -mb-px">
+                            <button class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-primary text-primary" data-tab="general">
+                                Cài đặt chung
+                            </button>
+                            <button class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="users">
+                                Quản lý người dùng
+                            </button>
+                            <button class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="departments">
+                                Phòng ban
+                            </button>
+                            <button class="tab-button py-4 px-6 text-center border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300" data-tab="notifications">
+                                Thông báo
+                            </button>
+                        </nav>
+                    </div>
+                    <div class="p-6">
+                        <!-- General Settings Tab -->
+                        <div id="general-tab" class="tab-content">
+                            <div class="grid grid-cols-1 gap-6">
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Tên công ty</label>
+                                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" value="Công ty ABC">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Địa chỉ</label>
+                                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" value="123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Số điện thoại</label>
+                                    <input type="text" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" value="(028) 3827 3827">
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 mb-2">Email</label>
+                                    <input type="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" value="contact@companyabc.com">
+                                </div>
+                                <div>
+                                    <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                        Lưu thay đổi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Users Management Tab (hidden by default) -->
+                        <div id="users-tab" class="tab-content hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-semibold">Danh sách người dùng</h3>
+                                <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                                    <i class="fas fa-plus mr-2"></i> Thêm người dùng
+                                </button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ tên</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phòng ban</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vai trò</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200" id="users-table-body">
+                                        <!-- Users will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Other tabs would be implemented similarly -->
+                    </div>
+                </div>
+            `,
+
+            deviceDetailModal: `
+                <div class="overlay absolute inset-0 bg-black opacity-70"></div>
+                <div class="modal relative bg-white rounded-lg shadow-xl max-w-4xl mx-auto my-12">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-xl font-semibold">Chi tiết thiết bị</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="closeModal('deviceDetailModal')">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                            <div class="md:col-span-1">
+                                <div class="bg-gray-200 h-64 rounded-lg flex items-center justify-center">
+                                    <img id="detailImage" src="" alt="Device Image" class="h-56 object-contain">
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <h2 id="detailName" class="text-2xl font-bold mb-2"></h2>
+                                <p id="detailCode" class="text-gray-600 mb-4"></p>
+                                
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Loại thiết bị</p>
+                                        <p id="detailType" class="font-medium"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Model</p>
+                                        <p id="detailModel" class="font-medium"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Ngày mua</p>
+                                        <p id="detailPurchaseDate" class="font-medium"></p>
+                                    </div>
+                                    <div>
+                                        <p class="text-gray-500 text-sm">Giá trị</p>
+                                        <p id="detailValue" class="font-medium"></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <p class="text-gray-500 text-sm">Phòng ban</p>
+                                    <p id="detailDepartment" class="font-medium"></p>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <p class="text-gray-500 text-sm">Người sử dụng</p>
+                                    <p id="detailUser" class="font-medium"></p>
+                                </div>
+                                
+                                <div>
+                                    <p class="text-gray-500 text-sm">Trạng thái</p>
+                                    <p id="detailStatus" class="font-medium"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="text-lg font-semibold mb-3">Thông số kỹ thuật</h4>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                <div>
+                                    <p class="text-gray-500 text-sm">CPU</p>
+                                    <p id="detailCPU" class="font-medium"></p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">RAM</p>
+                                    <p id="detailRAM" class="font-medium"></p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Ổ cứng</p>
+                                    <p id="detailStorage" class="font-medium"></p>
+                                </div>
+                                <div>
+                                    <p class="text-gray-500 text-sm">Hệ điều hành</p>
+                                    <p id="detailOS" class="font-medium"></p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t pt-4">
+                            <h4 class="text-lg font-semibold mb-3">Lịch sử bảo trì</h4>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Ngày</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Loại</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Mô tả</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Kỹ thuật viên</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="maintenanceHistory" class="bg-white divide-y divide-gray-200">
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 border-t flex justify-between">
+                        <button id="reportIssueBtn" class="bg-danger text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-2"></i> Báo cáo hư hỏng
+                        </button>
+                        <div class="space-x-2">
+                            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">In thông tin</button>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700">Chỉnh sửa</button>
+                        </div>
+                    </div>
+                </div>
+            `,
+
+            reportIssueModal: `
+                <div class="overlay absolute inset-0 bg-black opacity-70"></div>
+                <div class="modal relative bg-white rounded-lg shadow-xl max-w-2xl mx-auto my-12">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-xl font-semibold">Báo cáo hư hỏng thiết bị</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="closeModal('reportIssueModal')">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <p class="block text-gray-700 mb-2">Thiết bị</p>
+                            <p class="font-semibold" id="reportDeviceName">Laptop Dell XPS 15 (TB-001)</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="issueType">Loại sự cố</label>
+                            <select id="issueType" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="">Chọn loại sự cố</option>
+                                <option value="hardware">Phần cứng</option>
+                                <option value="software">Phần mềm</option>
+                                <option value="network">Mạng</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2" for="issueDescription">Mô tả chi tiết</label>
+                            <textarea id="issueDescription" rows="4" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Mô tả chi tiết sự cố bạn gặp phải..."></textarea>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Mức độ ưu tiên</label>
+                            <div class="flex space-x-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="priority" value="low" class="form-radio text-primary">
+                                    <span class="ml-2">Thấp</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="priority" value="medium" class="form-radio text-primary" checked>
+                                    <span class="ml-2">Trung bình</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="priority" value="high" class="form-radio text-primary">
+                                    <span class="ml-2">Cao</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 mb-2">Tải lên hình ảnh (nếu có)</label>
+                            <div class="flex items-center justify-center w-full">
+                                <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                        <p class="text-sm text-gray-500">Kéo thả hình ảnh vào đây hoặc click để chọn</p>
+                                    </div>
+                                    <input type="file" class="hidden" multiple>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 border-t flex justify-end space-x-2">
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="closeModal('reportIssueModal')">Hủy</button>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700" onclick="submitIssue()">Gửi báo cáo</button>
+                    </div>
+                </div>
+            `,
+
+            addDeviceModal: `
+                <div class="overlay absolute inset-0 bg-black opacity-70"></div>
+                <div class="modal relative bg-white rounded-lg shadow-xl max-w-2xl mx-auto my-12">
+                    <div class="px-6 py-4 border-b flex justify-between items-center">
+                        <h3 class="text-xl font-semibold">Thêm thiết bị mới</h3>
+                        <button class="text-gray-500 hover:text-gray-700" onclick="closeModal('addDeviceModal')">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="deviceName">Tên thiết bị</label>
+                                <input type="text" id="deviceName" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nhập tên thiết bị">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="deviceType">Loại thiết bị</label>
+                                <select id="deviceType" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="">Chọn loại thiết bị</option>
+                                    <option value="laptop">Laptop</option>
+                                    <option value="desktop">Máy tính để bàn</option>
+                                    <option value="printer">Máy in</option>
+                                    <option value="monitor">Màn hình</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="deviceModel">Model</label>
+                                <input type="text" id="deviceModel" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nhập model">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="deviceSerial">Số serial</label>
+                                <input type="text" id="deviceSerial" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Nhập số serial">
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="deviceDepartment">Phòng ban</label>
+                                <select id="deviceDepartment" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="">Chọn phòng ban</option>
+                                    <option value="engineering">Kỹ thuật</option>
+                                    <option value="sales">Kinh doanh</option>
+                                    <option value="hr">Nhân sự</option>
+                                    <option value="accounting">Kế toán</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-gray-700 mb-2" for="deviceStatus">Trạng thái</label>
+                                <select id="deviceStatus" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                                    <option value="active">Hoạt động tốt</option>
+                                    <option value="maintenance">Đang bảo trì</option>
+                                    <option value="broken">Hư hỏng</option>
+                                    <option value="inactive">Ngừng hoạt động</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 mb-2" for="deviceSpecs">Thông số kỹ thuật</label>
+                                <textarea id="deviceSpecs" rows="3" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Mô tả thông số kỹ thuật"></textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-700 mb-2" for="deviceImage">Hình ảnh thiết bị</label>
+                                <div class="flex items-center justify-center w-full">
+                                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
+                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                            <p class="text-sm text-gray-500">Kéo thả hình ảnh vào đây hoặc click để chọn</p>
+                                        </div>
+                                        <input type="file" id="deviceImage" class="hidden">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 border-t flex justify-end space-x-2">
+                        <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50" onclick="closeModal('addDeviceModal')">Hủy</button>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700" onclick="addDevice()">Thêm thiết bị</button>
+                    </div>
+                </div>
+            `
+        };
+
+        // Sample device data (will be replaced with API data)
+        const devices = {
+            1: {
+                name: "Laptop Dell XPS 15",
+                code: "TB-001",
+                type: "Laptop",
+                model: "XPS 15 9500",
+                purchaseDate: "15/03/2022",
+                value: "35,000,000 VNĐ",
+                department: "Phòng Kỹ thuật",
+                user: "Nguyễn Văn A",
+                status: "Hoạt động tốt",
+                statusClass: "bg-success text-white",
+                image: "https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=Laptop+Dell+XPS",
+                specs: {
+                    cpu: "Intel Core i7-10750H",
+                    ram: "16GB DDR4",
+                    storage: "512GB SSD",
+                    os: "Windows 10 Pro"
+                },
+                maintenance: [
+                    { date: "10/09/2023", type: "Bảo trì định kỳ", description: "Vệ sinh và kiểm tra phần cứng", technician: "Trần Văn B" },
+                    { date: "15/07/2023", type: "Nâng cấp", description: "Nâng cấp phiên bản hệ điều hành", technician: "Lê Thị C" }
+                ]
+            },
+            2: {
+                name: "Macbook Pro 16\"",
+                code: "TB-002",
+                type: "Laptop",
+                model: "Macbook Pro 2021",
+                purchaseDate: "20/05/2022",
+                value: "50,000,000 VNĐ",
+                department: "Phòng Kinh doanh",
+                user: "Trần Thị B",
+                status: "Hư hỏng",
+                statusClass: "bg-danger text-white",
+                image: "https://via.placeholder.com/300x200/EF4444/FFFFFF?text=Macbook+Pro",
+                specs: {
+                    cpu: "Apple M1 Pro",
+                    ram: "16GB Unified Memory",
+                    storage: "1TB SSD",
+                    os: "macOS Monterey"
+                },
+                maintenance: [
+                    { date: "05/08/2023", type: "Sửa chữa", description: "Thay màn hình", technician: "Phạm Văn D" },
+                    { date: "12/06/2023", type: "Bảo trì", description: "Vệ sinh và bảo dưỡng", technician: "Lê Thị C" }
+                ]
+            },
+            3: {
+                name: "PC Workstation HP",
+                code: "TB-003",
+                type: "Máy tính để bàn",
+                model: "Z4 G4",
+                purchaseDate: "10/01/2021",
+                value: "42,000,000 VNĐ",
+                department: "Phòng Thiết kế",
+                user: "Lê Văn C",
+                status: "Đang bảo trì",
+                statusClass: "bg-warning text-white",
+                image: "https://via.placeholder.com/300x200/F59E0B/FFFFFF?text=PC+Workstation",
+                specs: {
+                    cpu: "Intel Xeon W-2133",
+                    ram: "32GB ECC DDR4",
+                    storage: "1TB SSD + 2TB HDD",
+                    os: "Windows 10 Pro"
+                },
+                maintenance: [
+                    { date: "01/09/2023", type: "Bảo trì", description: "Nâng cấp RAM", technician: "Trần Văn B" },
+                    { date: "20/07/2023", type: "Sửa chữa", description: "Thay nguồn", technician: "Nguyễn Văn E" }
+                ]
+            }
+        };
+
+        // API Functions
+        async function fetchDevices() {
+            try {
+                // In a real application, you would fetch from your API
+                // const response = await fetch(`${API_BASE_URL}/devices`);
+                // const devices = await response.json();
+                
+                // For demo purposes, we'll use the sample data
+                return Object.values(devices);
+            } catch (error) {
+                console.error('Error fetching devices:', error);
+                return [];
+            }
+        }
+
+        async function addDevice(deviceData) {
+            try {
+                // In a real application, you would post to your API
+                // const response = await fetch(`${API_BASE_URL}/devices`, {
+                //     method: 'POST',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify(deviceData),
+                // });
+                // const result = await response.json();
+                
+                // For demo purposes, we'll just log the data
+                console.log('Adding device:', deviceData);
+                alert('Thiết bị đã được thêm thành công!');
+                return { success: true };
+            } catch (error) {
+                console.error('Error adding device:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function updateDevice(deviceId, deviceData) {
+            try {
+                // In a real application, you would put to your API
+                // const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
+                //     method: 'PUT',
+                //     headers: {
+                //         'Content-Type': 'application/json',
+                //     },
+                //     body: JSON.stringify(deviceData),
+                // });
+                // const result = await response.json();
+                
+                // For demo purposes, we'll just log the data
+                console.log('Updating device:', deviceId, deviceData);
+                alert('Thiết bị đã được cập nhật thành công!');
+                return { success: true };
+            } catch (error) {
+                console.error('Error updating device:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function deleteDevice(deviceId) {
+            try {
+                // In a real application, you would delete from your API
+                // const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
+                //     method: 'DELETE',
+                // });
+                // const result = await response.json();
+                
+                // For demo purposes, we'll just log the data
+                console.log('Deleting device:', deviceId);
+                alert('Thiết bị đã được xóa thành công!');
+                return { success: true };
+            } catch (error) {
+                console.error('Error deleting device:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        // Component rendering functions
+        function renderComponent(componentId, content) {
+            const element = document.getElementById(componentId);
+            if (element) {
+                element.innerHTML = content;
+                
+                // Initialize component-specific functionality
+                if (componentId === 'devices') {
+                    initializeDevicesPage();
+                } else if (componentId === 'dashboard') {
+                    initializeDashboardPage();
+                } else if (componentId === 'repair-requests') {
+                    initializeRepairRequestsPage();
+                } else if (componentId === 'repair-history') {
+                    initializeRepairHistoryPage();
+                } else if (componentId === 'settings') {
+                    initializeSettingsPage();
+                } else if (componentId === 'deviceDetailModal') {
+                    initializeDeviceDetailModal();
+                } else if (componentId === 'reportIssueModal') {
+                    initializeReportIssueModal();
+                } else if (componentId === 'addDeviceModal') {
+                    initializeAddDeviceModal();
+                }
+            }
+        }
+
+        function initializeDevicesPage() {
+            // Load devices data
+            loadDevicesData();
+            
+            // Add event listeners for search and filter
+            document.getElementById('searchInput')?.addEventListener('input', filterDevices);
+            document.getElementById('statusFilter')?.addEventListener('change', filterDevices);
+            document.getElementById('departmentFilter')?.addEventListener('change', filterDevices);
+        }
+
+        function initializeDashboardPage() {
+            // Load dashboard data
+            loadDashboardData();
+        }
+
+        function initializeRepairRequestsPage() {
+            // Load repair requests data
+            loadRepairRequestsData();
+        }
+
+        function initializeRepairHistoryPage() {
+            // Load repair history data
+            loadRepairHistoryData();
+        }
+
+        function initializeSettingsPage() {
+            // Initialize tab functionality
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('border-primary', 'text-primary');
+                        btn.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    
+                    // Add active class to clicked button
+                    this.classList.remove('border-transparent', 'text-gray-500');
+                    this.classList.add('border-primary', 'text-primary');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Show the selected tab content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`)?.classList.remove('hidden');
+                });
+            });
+        }
+
+        function initializeDeviceDetailModal() {
+            // Initialize device detail modal functionality
+            document.getElementById('reportIssueBtn')?.addEventListener('click', function() {
+                closeModal('deviceDetailModal');
+                showModal('reportIssueModal');
+            });
+        }
+
+        function initializeReportIssueModal() {
+            // Initialize report issue modal functionality
+        }
+
+        function initializeAddDeviceModal() {
+            // Initialize add device modal functionality
+        }
+
+        // Data loading functions
+        async function loadDevicesData() {
+            const devices = await fetchDevices();
+            
+            // Update device cards
+            const deviceCardsContainer = document.getElementById('device-cards');
+            if (deviceCardsContainer) {
+                deviceCardsContainer.innerHTML = devices.map(device => `
+                    <div class="device-card bg-white rounded-lg shadow overflow-hidden transition-all duration-300 cursor-pointer" onclick="showDeviceDetail(${device.id || 1})">
+                        <div class="h-40 bg-gray-200 relative">
+                            <img src="${device.image || 'https://via.placeholder.com/300x200/3B82F6/FFFFFF?text=Thiết+bị'}" alt="Device Image" class="w-full h-full object-cover">
+                            <span class="status-badge ${device.statusClass || 'bg-success text-white'} absolute top-3 right-3">${device.status || 'Hoạt động tốt'}</span>
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-1">${device.name || 'Thiết bị'}</h3>
+                            <p class="text-gray-600 text-sm mb-2">Mã thiết bị: ${device.code || 'N/A'}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm text-gray-500">Phòng: ${device.department || 'N/A'}</span>
+                                <span class="text-sm font-medium">Người dùng: ${device.user || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update devices table
+            const devicesTableBody = document.getElementById('devices-table-body');
+            if (devicesTableBody) {
+                devicesTableBody.innerHTML = devices.map(device => `
+                    <tr class="table-row">
+                        <td class="px-6 py-4 whitespace-nowrap">${device.code || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${device.name || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${device.type || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${device.department || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${device.user || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${device.statusClass || 'bg-success text-white'}">${device.status || 'Hoạt động tốt'}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="showDeviceDetail(${device.id || 1})">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-yellow-600 hover:text-yellow-800 mr-2">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Update pagination info
+            const paginationInfo = document.getElementById('devices-pagination-info');
+            if (paginationInfo) {
+                paginationInfo.textContent = `Hiển thị 1 đến ${devices.length} của ${devices.length} thiết bị`;
+            }
+        }
+
+        async function loadDashboardData() {
+            const devices = await fetchDevices();
+            
+            // Update stats
+            document.getElementById('total-devices').textContent = devices.length;
+            document.getElementById('active-devices').textContent = devices.filter(d => d.status === 'Hoạt động tốt').length;
+            document.getElementById('maintenance-devices').textContent = devices.filter(d => d.status === 'Đang bảo trì').length;
+            document.getElementById('broken-devices').textContent = devices.filter(d => d.status === 'Hư hỏng').length;
+            
+            // Update recent activities
+            const recentActivities = document.getElementById('recent-activities');
+            if (recentActivities) {
+                recentActivities.innerHTML = `
+                    <div class="flex items-start">
+                        <div class="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Thêm thiết bị mới</p>
+                            <p class="text-gray-600 text-sm">MacBook Pro 16" đã được thêm vào hệ thống</p>
+                            <p class="text-gray-500 text-xs">2 giờ trước</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="p-2 rounded-full bg-yellow-100 text-yellow-600 mr-3">
+                            <i class="fas fa-tools"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Bảo trì thiết bị</p>
+                            <p class="text-gray-600 text-sm">Laptop Dell XPS 15 đang được bảo trì</p>
+                            <p class="text-gray-500 text-xs">5 giờ trước</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="p-2 rounded-full bg-red-100 text-red-600 mr-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Báo cáo hư hỏng</p>
+                            <p class="text-gray-600 text-sm">PC Workstation HP báo lỗi khởi động</p>
+                            <p class="text-gray-500 text-xs">1 ngày trước</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <div class="p-2 rounded-full bg-green-100 text-green-600 mr-3">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">Sửa chữa hoàn tất</p>
+                            <p class="text-gray-600 text-sm">Màn hình Samsung đã được sửa xong</p>
+                            <p class="text-gray-500 text-xs">2 ngày trước</p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Update pending requests
+            const pendingRequests = document.getElementById('pending-requests');
+            if (pendingRequests) {
+                pendingRequests.innerHTML = `
+                    <div class="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                            <p class="font-medium">Laptop ASUS ROG</p>
+                            <p class="text-gray-600 text-sm">Lỗi màn hình xanh</p>
+                        </div>
+                        <span class="status-badge bg-warning text-white">Chờ duyệt</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                            <p class="font-medium">iPhone 13 Pro</p>
+                            <p class="text-gray-600 text-sm">Pin chai, sạc không vào</p>
+                        </div>
+                        <span class="status-badge bg-warning text-white">Chờ duyệt</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                            <p class="font-medium">Màn hình Dell 27"</p>
+                            <p class="text-gray-600 text-sm">Kẻ sọc màn hình</p>
+                        </div>
+                        <span class="status-badge bg-danger text-white">Cần xử lý gấp</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 border rounded-lg">
+                        <div>
+                            <p class="font-medium">PC Gaming</p>
+                            <p class="text-gray-600 text-sm">Quá nóng, tự tắt</p>
+                        </div>
+                        <span class="status-badge bg-warning text-white">Chờ duyệt</span>
+                    </div>
+                `;
+            }
+        }
+
+        async function loadRepairRequestsData() {
+            // In a real application, you would fetch repair requests from your API
+            const repairRequests = [
+                {
+                    id: "YC-001",
+                    device: "Laptop Dell XPS 15 (TB-001)",
+                    requester: "Nguyễn Văn A",
+                    date: "15/09/2023",
+                    description: "Màn hình xuất hiện kẻ sọc, không khởi động được",
+                    status: "Chờ duyệt",
+                    statusClass: "bg-warning text-white"
+                },
+                {
+                    id: "YC-002",
+                    device: "Macbook Pro 16\" (TB-002)",
+                    requester: "Trần Thị B",
+                    date: "14/09/2023",
+                    description: "Pin sạc không vào, máy tắt nguồn đột ngột",
+                    status: "Đã duyệt",
+                    statusClass: "bg-primary text-white"
+                },
+                {
+                    id: "YC-003",
+                    device: "PC Workstation HP (TB-003)",
+                    requester: "Lê Văn C",
+                    date: "13/09/2023",
+                    description: "Máy hoạt động chậm, thường xuyên bị treo",
+                    status: "Đã hoàn thành",
+                    statusClass: "bg-success text-white"
+                }
+            ];
+            
+            // Update repair requests table
+            const requestsTableBody = document.getElementById('repair-requests-table-body');
+            if (requestsTableBody) {
+                requestsTableBody.innerHTML = repairRequests.map(request => `
+                    <tr class="table-row">
+                        <td class="px-6 py-4 whitespace-nowrap">${request.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${request.device}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${request.requester}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${request.date}</td>
+                        <td class="px-6 py-4">${request.description}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${request.statusClass}">${request.status}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-green-600 hover:text-green-800 mr-2">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Update pagination info
+            const paginationInfo = document.getElementById('requests-pagination-info');
+            if (paginationInfo) {
+                paginationInfo.textContent = `Hiển thị 1 đến ${repairRequests.length} của ${repairRequests.length} yêu cầu`;
+            }
+        }
+
+        async function loadRepairHistoryData() {
+            // In a real application, you would fetch repair history from your API
+            const repairHistory = [
+                {
+                    id: "SC-001",
+                    device: "Laptop Dell XPS 15 (TB-001)",
+                    startDate: "10/09/2023",
+                    endDate: "12/09/2023",
+                    technician: "Nguyễn Văn Kỹ Thuật",
+                    description: "Thay thế màn hình, vệ sinh máy",
+                    cost: "3,500,000 VNĐ"
+                },
+                {
+                    id: "SC-002",
+                    device: "Macbook Pro 16\" (TB-002)",
+                    startDate: "05/09/2023",
+                    endDate: "07/09/2023",
+                    technician: "Trần Thị Sửa Chữa",
+                    description: "Thay pin, cài đặt lại hệ điều hành",
+                    cost: "4,200,000 VNĐ"
+                },
+                {
+                    id: "SC-003",
+                    device: "PC Workstation HP (TB-003)",
+                    startDate: "01/09/2023",
+                    endDate: "03/09/2023",
+                    technician: "Lê Văn Bảo Trì",
+                    description: "Nâng cấp RAM, thay ổ cứng SSD",
+                    cost: "5,700,000 VNĐ"
+                }
+            ];
+            
+            // Update repair history table
+            const historyTableBody = document.getElementById('repair-history-table-body');
+            if (historyTableBody) {
+                historyTableBody.innerHTML = repairHistory.map(history => `
+                    <tr class="table-row">
+                        <td class="px-6 py-4 whitespace-nowrap">${history.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${history.device}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${history.startDate}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${history.endDate}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${history.technician}</td>
+                        <td class="px-6 py-4">${history.description}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${history.cost}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-yellow-600 hover:text-yellow-800">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Update pagination info
+            const paginationInfo = document.getElementById('history-pagination-info');
+            if (paginationInfo) {
+                paginationInfo.textContent = `Hiển thị 1 đến ${repairHistory.length} của ${repairHistory.length} bản ghi`;
+            }
+        }
+
+        // Utility functions
+        function filterDevices() {
+            const searchText = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('statusFilter')?.value || '';
+            const departmentFilter = document.getElementById('departmentFilter')?.value || '';
+            
+            // In a real application, you would filter the data from the API
+            // For now, we'll just log the filter values
+            console.log('Filtering devices:', { searchText, statusFilter, departmentFilter });
+        }
+
+        function showDeviceDetail(deviceId) {
+            const device = devices[deviceId];
+            if (!device) return;
+            
+            // Render device detail modal
+            renderComponent('deviceDetailModal', components.deviceDetailModal);
+            
+            // Populate device details
+            document.getElementById('detailImage').src = device.image;
+            document.getElementById('detailName').textContent = device.name;
+            document.getElementById('detailCode').textContent = `Mã thiết bị: ${device.code}`;
+            document.getElementById('detailType').textContent = device.type;
+            document.getElementById('detailModel').textContent = device.model;
+            document.getElementById('detailPurchaseDate').textContent = device.purchaseDate;
+            document.getElementById('detailValue').textContent = device.value;
+            document.getElementById('detailDepartment').textContent = device.department;
+            document.getElementById('detailUser').textContent = device.user;
+            
+            const statusElement = document.getElementById('detailStatus');
+            statusElement.textContent = device.status;
+            statusElement.className = `status-badge font-medium inline-block ${device.statusClass}`;
+            
+            // Populate specs
+            document.getElementById('detailCPU').textContent = device.specs.cpu;
+            document.getElementById('detailRAM').textContent = device.specs.ram;
+            document.getElementById('detailStorage').textContent = device.specs.storage;
+            document.getElementById('detailOS').textContent = device.specs.os;
+            
+            // Populate maintenance history
+            const maintenanceTable = document.getElementById('maintenanceHistory');
+            maintenanceTable.innerHTML = '';
+            
+            device.maintenance.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-2 whitespace-nowrap">${item.date}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">${item.type}</td>
+                    <td class="px-4 py-2">${item.description}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">${item.technician}</td>
+                `;
+                maintenanceTable.appendChild(row);
+            });
+            
+            // Set up report issue button
+            document.getElementById('reportIssueBtn').onclick = function() {
+                closeModal('deviceDetailModal');
+                document.getElementById('reportDeviceName').textContent = `${device.name} (${device.code})`;
+                showModal('reportIssueModal');
+            };
+            
+            showModal('deviceDetailModal');
+        }
+
+        function showAddDeviceModal() {
+            renderComponent('addDeviceModal', components.addDeviceModal);
+            showModal('addDeviceModal');
+        }
+
+        async function addDevice() {
+            const deviceData = {
+                name: document.getElementById('deviceName').value,
+                type: document.getElementById('deviceType').value,
+                model: document.getElementById('deviceModel').value,
+                serial: document.getElementById('deviceSerial').value,
+                department: document.getElementById('deviceDepartment').value,
+                status: document.getElementById('deviceStatus').value,
+                specs: document.getElementById('deviceSpecs').value
+            };
+            
+            const result = await addDevice(deviceData);
+            if (result.success) {
+                closeModal('addDeviceModal');
+                // Refresh devices list
+                loadDevicesData();
+            } else {
+                alert('Có lỗi xảy ra khi thêm thiết bị: ' + result.error);
+            }
+        }
+
+        function submitIssue() {
+            const issueType = document.getElementById('issueType').value;
+            const issueDescription = document.getElementById('issueDescription').value;
+            const priority = document.querySelector('input[name="priority"]:checked').value;
+            
+            // In a real application, you would submit the issue to your API
+            console.log('Submitting issue:', { issueType, issueDescription, priority });
+            
+            alert('Báo cáo hư hỏng đã được gửi thành công! Kỹ thuật viên sẽ liên hệ với bạn trong thời gian sớm nhất.');
+            closeModal('reportIssueModal');
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.remove('hidden');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle sidebar on mobile
+            document.getElementById('sidebarToggle').addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('active');
+            });
+
+            // Navigation between pages
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all items
+                    document.querySelectorAll('.nav-item').forEach(navItem => {
+                        navItem.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Hide all pages
+                    document.querySelectorAll('.page').forEach(page => {
+                        page.classList.remove('active');
+                    });
+                    
+                    // Show the selected page
+                    const pageId = this.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+                    
+                    // Render the page content
+                    if (components[pageId]) {
+                        renderComponent(pageId, components[pageId]);
+                    }
+                });
+            });
+
+            // Close modals when clicking outside
+            document.querySelectorAll('.overlay').forEach(overlay => {
+                overlay.addEventListener('click', function() {
+                    this.parentElement.classList.add('hidden');
+                });
+            });
+
+            // Prevent modal close when clicking inside modal
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            });
+
+            // Load initial page content
+            renderComponent('dashboard', components.dashboard);
+            renderComponent('devices', components.devices);
+            renderComponent('repair-requests', components.repairRequests);
+            renderComponent('repair-history', components.repairHistory);
+            renderComponent('settings', components.settings);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đánh Giá Yêu Cầu Sửa Chữa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <!-- Thư viện xlsx -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-black text-white p-4 md:p-6">
+    <div class="text-gray-200 mx-auto w-full">
+      <!-- Alert Container -->
+      <div id="alertContainer"></div>
+
+      <!-- Header -->
+      <div class="pb-2">
+        <h3
+          class="text-3xl font-bold flex items-center gap-2 border-b-4 border-blue-300 text-white"
+        >
+          <i class="fas fa-tools text-blue-400"></i>
+          Classify repair requests
+        </h3>
+      </div>
+
+      <!-- Thanh công cụ filter -->
+      <!-- Filter -->
+
+      <details class="bg-gray-800 rounded p-3 my-2">
+        <summary class="cursor-pointer font-semibold text-blue-400">
+          Apply Filter
+        </summary>
+        <div id="Filter">
+          <div class="flex gap-2 justify-between mb-2 relative">
+            <div class="absolute right-0 top-[-1rem] flex gap-1">
+              <button
+                id="applyFilter"
+                class="z-10 cursor-pointer px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 rounded text-sm text-white flex items-center gap-2"
+              >
+                <i class="fas fa-filter text-green-300"></i> Filter
+              </button>
+
+              <button
+                id="clearFilter"
+                class="z-10 cursor-pointer px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 rounded text-sm text-white flex items-center gap-2"
+              >
+                <i class="fa-solid fa-filter-circle-xmark text-red-500"></i>
+                Clear Filter
+              </button>
+            </div>
+            <!-- idReFilter -->
+            <div class="flex-1 w-full">
+              <label for="idReFilter" class="block text-blue-300">ID Req</label>
+              <input
+                type="text"
+                placeholder="ID Req"
+                id="idReFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+              />
+            </div>
+
+            <!-- deviceFilter -->
+            <div class="flex-1">
+              <label for="deviceFilter" class="block text-blue-300"
+                >Device:</label
+              >
+              <input
+                type="text"
+                placeholder="Device"
+                id="deviceFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+              />
+            </div>
+
+            <!-- requestedByFilter -->
+            <div class="flex-1">
+              <label for="requestedByFilter" class="block text-blue-300"
+                >Requested By:</label
+              >
+              <input
+                type="text"
+                placeholder="Requested By"
+                id="requestedByFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+              />
+            </div>
+
+            <!-- Department filter -->
+            <div class="flex-1 relative">
+              <label for="departmentFilter" class="block text-blue-300"
+                >Department:</label
+              >
+              <input
+                onfocus="toggleFilterChecklist('departmentCheckList')"
+                onblur="closeChecklistOnBlur('departmentCheckList')"
+                type="text"
+                readonly
+                placeholder="Department"
+                id="departmentFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+              />
+              <!-- Department Checklist -->
+              <div
+                id="departmentCheckList"
+                tabindex="0"
+                class="hidden mt-2 bg-gray-800 p-3 rounded shadow border border-gray-700 absolute top-[90%] left-0 w-full z-10"
+              >
+                <div
+                  class="flex flex-col gap-1"
+                  id="departmentChecklistContent"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="my-2 flex gap-2 justify-between">
+            <!-- Team filter -->
+            <div class="flex-1 relative">
+              <label for="teamFilter" class="block text-blue-300">Team</label>
+              <input
+                onfocus="toggleFilterChecklist('teamCheckList')"
+                onblur="closeChecklistOnBlur('teamCheckList')"
+                readonly
+                type="text"
+                placeholder="Team"
+                id="teamFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+              />
+              <!-- Team Checklist -->
+              <div
+                id="teamCheckList"
+                class="mt-2 bg-gray-800 p-3 rounded shadow border border-gray-700 absolute top-[90%] left-0 w-full z-10 hidden"
+              >
+                <div
+                  class="flex flex-col gap-1"
+                  id="teamChecklistContent"
+                ></div>
+              </div>
+            </div>
+
+            <div class="flex-1 relative">
+              <label for="statusFilter" class="block text-blue-300"
+                >Status</label
+              >
+              <input
+                onfocus="toggleFilterChecklist('statusCheckList')"
+                onblur="closeChecklistOnBlur('statusCheckList')"
+                readonly
+                type="text"
+                placeholder="Status"
+                id="statusFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+              />
+              <!-- Status Checklist -->
+              <div
+                id="statusCheckList"
+                class="mt-2 bg-gray-800 p-3 rounded shadow border border-gray-700 absolute top-[90%] left-0 w-full z-10 hidden"
+              >
+                <div
+                  class="flex flex-col gap-1"
+                  id="statusChecklistContent"
+                ></div>
+              </div>
+            </div>
+
+            <div class="flex-1">
+              <label class="block text-blue-300" for="fromDateFilter"
+                >From Date:</label
+              >
+              <input
+                type="date"
+                id="fromDateFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white w-full"
+              />
+            </div>
+
+            <div class="flex-1">
+              <label class="block text-blue-300" for="toDateFilter"
+                >To Date:</label
+              >
+              <input
+                type="date"
+                id="toDateFilter"
+                class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-700 mb-1 flex justify-between">
+      <nav class="flex">
+        <button
+          onclick="loadRequests('action')"
+          data-target="action"
+          data-status=""
+          class="tabBtn text-gray-400 px-4 py-2"
+        >
+          Action
+        </button>
+        <button
+          onclick="loadRequests('all')"
+          data-target="all"
+          data-status=""
+          class="tabBtn text-gray-400 px-3 py-2"
+        >
+          AllList
+        </button>
+      </nav>
+      <div class="flex-1">
+        <div id="pagination" class="flex justify-end items-center"></div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Tab Danh sách -->
+    <div id="allList" class="tabContent">
+      <div
+        class="overflow-x-auto rounded border border-gray-800 shadow-lg overflow-y-auto max-h-[65vh]"
+      >
+        <table
+          class="min-w-full text-sm text-gray-300 bg-gray-900 border border-gray-700 border-collapse"
+        >
+          <thead
+            class="bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-slate-200 text-center"
+          >
+            <tr>
+              <th class="px-4 py-1 border border-gray-700">ID Req</th>
+              <th class="px-4 py-1 border border-gray-700">Iden. No.</th>
+              <th class="px-4 py-1 border border-gray-700">Device Name</th>
+              <th class="px-4 py-1 border border-gray-700">Requested By</th>
+              <th class="px-4 py-1 border border-gray-700">Department</th>
+              <th class="px-4 py-1 border border-gray-700">Team</th>
+              <th class="px-4 py-1 border border-gray-700">Requests Date</th>
+              <th class="px-4 py-1 border border-gray-700">TAT</th>
+              <th class="px-4 py-1 border border-gray-700">Priority</th>
+              <th class="px-4 py-1 border border-gray-700">Status</th>
+              <th class="px-4 py-1 border border-gray-700">Action ✅</th>
+            </tr>
+          </thead>
+          <tbody
+            id="requestsTableBody"
+            class="divide-y divide-gray-800"
+          ></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Modal đánh giá -->
+    <div id="evaluateModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+      <div class="flex items-center justify-center min-h-[90vh] p-4">
+        <div class="fixed inset-0 bg-black opacity-50"></div>
+
+        <div
+          id="evaluateModalContent"
+          class="relative bg-gray-800 rounded max-w-2xl w-full p-6 transform transition-all duration-300"
+        >
+          <!-- Header -->
+          <div
+            class="flex justify-between items-center border-b border-gray-700 mb-2"
+          >
+            <h3 class="text-xl font-semibold text-blue-300 pd-2">
+              📝Evaluate Request #<span id="requestIdDisplay"></span>
+            </h3>
+            <button
+              data-close-modal
+              type="button"
+              class="text-gray-400 hover:text-white px-2 py-1 bg-red-500"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <!-- Form -->
+          <form id="evaluateForm">
+            <input type="hidden" id="evaluateRequestId" />
+
+            <!-- Issue Description -->
+            <div class="mb-4">
+              <label class="block text-blue-200">Issue Description:</label>
+              <div
+                id="issueDescription"
+                class="bg-gray-700 p-3 rounded min-h-20"
+              ></div>
+            </div>
+
+            <!-- Rejection Alert -->
+            <div
+              id="rejectionAlert"
+              class="bg-red-900/20 border border-red-700 rounded p-3 mb-4 animate-fade-in"
+            >
+              <div class="flex items-center gap-2 text-red-300 mb-2">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong class="text-lg">Request has been rejected</strong>
+              </div>
+              <div
+                id="rejectedContent"
+                class="max-h-[8.5rem] overflow-y-scroll"
+              ></div>
+            </div>
+
+            <!-- Decision Content -->
+            <div class="mb-4">
+              <label for="technicianSelect" class="block text-blue-200"
+                >Technician:</label
+              >
+              <select
+                id="technicianSelect"
+                class="form-select bg-gray-700 w-full min-h-8"
+              >
+                <option value="">-- Select Technician --</option>
+              </select>
+            </div>
+
+            <div id="replaceContent" class="hidden">
+              <!-- Content for replace decision -->
+            </div>
+
+            <!-- Repair Decision -->
+            <div class="mb-4">
+              <label class="block text-blue-200">Decision:</label>
+              <div class="space-y-2 bg-gray-700 rounded px-3 py-2">
+                <label class="flex items-center">
+                  <input
+                    type="radio"
+                    name="repairDecision"
+                    value="InternalRepair"
+                    checked
+                  />
+                  <span class="ml-2">Internal Repair</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="radio"
+                    name="repairDecision"
+                    value="ExternalRepair"
+                  />
+                  <span class="ml-2">External Repair</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- checkbox lựa chọn done sửa chữa hay chưa -->
+            <div class="mb-4">
+              <div class="space-y-2 bg-gray-700 rounded px-3 py-2">
+                <label class="flex items-center">
+                  <input type="checkbox" id="repairDoneCheckbox" />
+                  <span class="ml-2">Repair Completed</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="mb-4">
+              <label class="block text-blue-200"
+                >Remark
+                <span id="evaluationNotesRequired" class="text-red-500"></span
+              ></label>
+              <textarea
+                id="evaluationNotes"
+                class="form-textarea bg-gray-700 w-full"
+                rows="4"
+              ></textarea>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex justify-end gap-2 border-t border-gray-700 pt-3">
+              <button
+                type="button"
+                data-close-modal
+                class="bg-gray-500 px-2 py-1 rounded hover:bg-gray-600"
+              >
+                Close
+              </button>
+              <button
+                type="submit"
+                class="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- View modal -->
+    <div
+      id="viewModal"
+      class="fixed inset-0 w-full z-50 overflow-y-auto hidden"
+    >
+      <div class="absolute inset-0 bg-bg-black/6"></div>
+      <div
+        id="viewModalContent"
+        class="relative mx-auto my-2 bg-gray-900 rounded shadow-xl w-[85vw] px-6 py-2 transform transition overflow-y-auto max-h-[90vh]"
+      >
+        <!-- Header -->
+        <div
+          class="flex justify-between items-center border-b border-gray-700 mb-2"
+        >
+          <h3 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list"></i>
+            View Detail
+          </h3>
+          <button
+            onclick="closeModal('viewModal')"
+            class="text-gray-400 hover:text-white p-2 px-3 bg-red-500"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- body -->
+        <div id="viewModalBody">
+          <!-- Detail Requests -->
+          <details
+            open
+            class="bg-gray-800 rounded p-2 shadow border border-gray-700"
+          >
+            <summary class="font-semibold text-blue-300 cursor-pointer mb-2">
+              <i class="fas fa-info-circle"></i> Request Info
+            </summary>
+            <div class="grid grid-cols-2 gap-4">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th
+                      colspan="2"
+                      class="text-center text-lg font-bold text-white border border-gray-700 pb-1 bg-blue-950"
+                    >
+                      Request Details
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 text-blue-300"
+                    >
+                      ID Req
+                    </td>
+                    <td class="px-2">1</td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 text-blue-300"
+                    >
+                      Device
+                    </td>
+                    <td class="px-2">Tensile</td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 text-blue-300"
+                    >
+                      Requested By
+                    </td>
+                    <td class="px-2">admin1</td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 text-blue-300"
+                    >
+                      Department
+                    </td>
+                    <td class="px-2">Hardline</td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 text-blue-300"
+                    >
+                      Team
+                    </td>
+                    <td class="px-2">CD</td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 text-blue-300"
+                    >
+                      Requests Date
+                    </td>
+                    <td class="px-2">2025-10-09 08:53</td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td
+                      class="px-2 border border-gray-700 hover:bg-gray-500 text-blue-300"
+                    >
+                      Status
+                    </td>
+                    <td class="text-red-400 font-bold px-2">Rejected</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table>
+                <thead>
+                  <tr>
+                    <td
+                      class="text-center text-lg font-bold text-white border border-gray-700 pb-1 bg-blue-950"
+                    >
+                      Device Error Detail
+                    </td>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="border border-gray-700 text-white text-center">
+                      Device Error
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <!-- Detail Approve -->
+          <div id="viewModalDetailApprove" class=""></div>
+
+          <!-- Detail Cancel -->
+          <div id="viewModalDetailCancel" class=""></div>
+        </div>
+
+        <!-- Footer -->
+        <div
+          class="flex justify-end items-center border-t border-gray-700 pt-3"
+        >
+          <div class="flex gap-2">
+            <button
+              onclick="closeModal('viewModal')"
+              class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal chi tiết yêu cầu -->
+    <div
+      id="requestDetailModal"
+      class="fixed inset-0 hidden z-50 overflow-y-auto"
+    >
+      <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div
+          class="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          id="detailModalOverlay"
+        ></div>
+        <div
+          id="detailModalContent"
+          class="bg-gray-900 rounded shadow-2xl w-full max-w-4xl transform transition-all scale-95 opacity-0 duration-200 max-h-screen overflow-y-auto relative z-10"
+        >
+          <!-- Header -->
+          <div
+            class="flex justify-between items-center border-b border-gray-700 px-6 py-4 sticky top-0 bg-gray-900 z-10 pd-2"
+          >
+            <h3 class="text-xl font-bold text-white">Detail Repair Request</h3>
+            <button
+              id="closeDetailModalBtn"
+              class="text-gray-400 hover:text-white"
+            >
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Thông tin cơ bản -->
+              <div class="bg-gray-800 rounded p-4 border border-gray-700">
+                <h4
+                  class="font-bold border-b border-gray-700 pd-2 text-blue-800 mb-3 text-xl"
+                >
+                  Information Request
+                </h4>
+                <div class="space-y-3">
+                  <p>
+                    <strong>Request ID:</strong>
+                    <span
+                      id="detailRequestId"
+                      class="text-white text-sm"
+                    ></span>
+                  </p>
+                  <p>
+                    <strong>Equipment Name:</strong>
+                    <span id="detailDevice" class="text-white text-sm"></span>
+                  </p>
+                  <p>
+                    <strong>Issue Description:</strong>
+                    <span id="detailIssue" class="text-gray-300"></span>
+                  </p>
+                  <p>
+                    <strong>Requester:</strong>
+                    <span
+                      id="detailRequester"
+                      class="text-white text-sm"
+                    ></span>
+                  </p>
+                  <p>
+                    <strong>Technician:</strong>
+                    <span
+                      id="detailTechnician"
+                      class="text-white text-sm"
+                    ></span>
+                  </p>
+                  <p>
+                    <strong>Department:</strong>
+                    <span id="detailLab" class="text-white text-sm"></span>
+                  </p>
+                  <p>
+                    <strong>Team:</strong>
+                    <span id="detailTeam" class="text-white text-sm"></span>
+                  </p>
+                  <p>
+                    <strong>Request Date:</strong>
+                    <span
+                      id="detailRequestDate"
+                      class="text-white text-sm"
+                    ></span>
+                  </p>
+                  <p>
+                    <strong>Status:</strong>
+                    <span id="detailStatus" class="text-white text-sm"></span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Thông tin đánh giá -->
+              <div class="bg-gray-800 rounded p-4 border border-gray-700">
+                <h4
+                  class="font-bold border-b border-gray-700 pd-2 text-blue-800 mb-3 text-xl"
+                >
+                  Evaluation Information
+                </h4>
+                <div class="space-y-3" id="detailEvaluationInfo">
+                  <!-- Nội dung sẽ được điền bằng JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div
+            class="flex justify-end gap-2 pt-4 border-t border-gray-700 px-6 py-4 sticky bottom-0 bg-gray-900"
+          >
+            <button
+              id="completeRepairDetailBtn"
+              class="px-4 py-1 bg-green-600 hover:bg-green-500 rounded text-white transition-colors hidden"
+            >
+              Complete Repair
+            </button>
+            <button
+              id="closeDetailModalBtn2"
+              class="px-4 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const firstTab = document
+          .querySelector(".tabBtn[data-target='action']")
+          .click(typeTab);
+      });
+    </script>
+    <script>
+      const username = "{{ current_user.username }}";
+      const userLabId = "{{ current_user.idlab }}";
+      const userTeamId = "{{ current_user.idteam }}";
+    </script>
+    <script src="/static/js/pages/pagination.js"></script>
+    <script src="/static/js/classify_repairs.js"></script>
+    <script src="/static/js/components/function_date-time.js"></script>
+  </body>
+</html>

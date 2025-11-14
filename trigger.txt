@@ -1,0 +1,78 @@
+-- Tạo bảng lưu lịch sử thay đổi trạng thái chi tiết
+CREATE TABLE IF NOT EXISTS repair_status_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    repair_request_id INTEGER NOT NULL,
+    old_status TEXT,
+    new_status TEXT,
+    change_timestamp TEXT DEFAULT (datetime('now')),
+    changed_by INTEGER, -- Có thể thêm field người thay đổi nếu cần
+    notes TEXT,
+    FOREIGN KEY (repair_request_id) REFERENCES repair_requests(id)
+);
+
+-- Trigger để ghi vào bảng lịch sử chi tiết
+CREATE TRIGGER IF NOT EXISTS trigger_repair_status_detail
+AFTER UPDATE OF Status ON repair_requests
+WHEN OLD.Status IS NOT NULL AND NEW.Status IS NOT NULL AND OLD.Status != NEW.Status
+BEGIN
+    INSERT INTO repair_status_history (
+        repair_request_id,
+        old_status,
+        new_status,
+        change_timestamp
+    )
+    VALUES (
+        NEW.id,
+        OLD.Status,
+        NEW.Status,
+        datetime('now')
+    );
+END;
+
+
+
+
+
+
+DROP TRIGGER trigger_history_exter;
+
+CREATE TRIGGER trigger_history_exter
+         AFTER UPDATE OF Status
+            ON repair_requests
+          WHEN NEW.Status = 'waitPR'
+BEGIN
+    INSERT INTO repair_history (
+                                   DeviceID,
+                                   RequestID,
+                                   RepairDate,
+                                   RepairType,
+                                   Cost,
+                                   Notes,
+                                   TechName
+                               )
+                               SELECT NEW.DeviceID,
+                                      NEW.id,
+                                      datetime('now'),
+                                      'External',
+                                      (
+                                          SELECT qo.unit_price
+                                            FROM quote_options qo
+                                                 JOIN
+                                                 quotations q ON qo.quotation_id = q.id
+                                           WHERE q.RequestID = NEW.id AND
+                                                 qo.status = 'Approved'
+                                           ORDER BY qo.option_no DESC
+                                           LIMIT 1
+                                      ),
+                                      (
+                                          SELECT qo.notes
+                                            FROM quote_options qo
+                                                 JOIN
+                                                 quotations q ON qo.quotation_id = q.id
+                                           WHERE q.RequestID = NEW.id AND
+                                                 qo.status = 'Approved'
+                                           ORDER BY qo.option_no DESC
+                                           LIMIT 1
+                                      ),
+                                      NEW.TechName;
+END;

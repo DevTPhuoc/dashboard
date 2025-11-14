@@ -1,0 +1,54 @@
+Phước: 
+UI update (Note) -LM, EM ==>  Từ chối approve --> required lý do
+Đặt tên file: FileName_idReq_Option_yyyy-mm-dd-hh-mm-ss
+Gom LM approve page
+
+*Trigger: 
+
+[
+  {
+    "date": "2025-10-13",
+    "option": [
+      {
+        "id": "1",
+        "vendor": "aaa",
+        "Price": "1000",
+        "Remark": "Check",
+        "FilePath": "path/to/file1",
+        "LMNote": "Lý do từ chối",
+        "EMNote": "Lý do từ chối"
+      }
+    ]
+  }
+]
+ 
+ 
+*Update code trigger: Update Status --> Update unit (Table status)
+*Add trigger: Add 1 status new --> Add status(Table status)
+ 
+
+
+
+
+
+
+
+
+ ---------------------------------------------------
+ Hằng: 
+Update Lab-List req MN
+update Lab-Lis req Staff (Loader, Page position)
+update EM-List req
+ 
+ -----------------------------------------------
+ Chú ý: 
+Nhánh main: FixSendRequest
+Tạo nhánh mới có tên: Function đang sử
+Tại nhánh mới --> ưu tiên commit code
+Bất kỳ function nào xong --> push --> Merger vào main
+Bất cứ nơi nào ghi nhận status --> Note lại
+==> Trước khi merger: 
+Pull
+Đứng tại nhánh main r ms merger
+ 
+ 

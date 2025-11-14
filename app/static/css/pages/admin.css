@@ -1,0 +1,101 @@
+/* Admin Page - Minimal CSS, 95% Tailwind */
+
+/* Glassmorphism effects không thể làm với Tailwind */
+.admin-glass-bg {
+  background: rgba(5, 5, 5, 0.95);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+.admin-glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+}
+
+.admin-glass-input:focus {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.admin-glass-table {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+}
+
+/* Card collapse animation */
+.card-content {
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  overflow: hidden;
+}
+
+.card-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.card-content.expanded {
+  opacity: 1;
+}
+
+/* Loading spinner animation */
+@keyframes admin-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-loading-spin {
+  animation: admin-spin 1s linear infinite;
+}
+
+/* Checkbox custom styling for better visibility */
+.admin-checkbox {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.admin-checkbox:checked {
+  background: rgba(59, 130, 246, 0.8);
+  border-color: rgba(59, 130, 246, 1);
+}
+
+/* Hide/show animation for filtered elements */
+.user-row,
+.user-permission-form,
+.role-permission-form {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.user-row.hidden,
+.user-permission-form.hidden,
+.role-permission-form.hidden {
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Card header hover effect */
+.admin-card .flex.items-center.justify-between:hover {
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.2s ease;
+}
+
+/* Card toggle button hover effect */
+.card-toggle {
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.card-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}

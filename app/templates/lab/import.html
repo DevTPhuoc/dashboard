@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Import Thiết Bị</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+  </head>
+  <body class="bg-black text-white p-6">
+    <div class="space-y-6 text-gray-200 max-w-4xl mx-auto 2xl:max-w-7xl">
+      <!-- Alert Container -->
+      <div id="alertContainer"></div>
+
+      <!-- Header -->
+      <div class="flex flex-wrap justify-between items-center gap-4">
+        <h3 class="text-2xl font-bold flex items-center gap-2">
+          <i class="fas fa-file-import text-blue-400"></i>
+          Import Thiết Bị
+        </h3>
+      </div>
+
+      <!-- Import Card -->
+      <div
+        class="bg-gray-900 rounded-xl border border-gray-800 shadow-lg overflow-hidden"
+      >
+        <!-- Card Header -->
+        <div
+          class="bg-gradient-to-r from-blue-500/20 to-purple-600/20 border-b border-gray-800 px-6 py-4"
+        >
+          <h4 class="text-lg font-bold text-blue-400 flex items-center gap-2">
+            <i class="fas fa-upload"></i>
+            Tải lên file Excel
+          </h4>
+        </div>
+
+        <!-- Card Body -->
+        <div class="p-6 space-y-6">
+          <!-- File Upload Area -->
+          <div class="space-y-4">
+            <div
+              class="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-blue-500 transition-colors cursor-pointer bg-gray-800/50"
+              onclick="document.getElementById('fileInput').click()"
+            >
+              <i
+                class="fas fa-cloud-upload-alt text-4xl text-blue-400 mb-4"
+              ></i>
+              <h5 class="text-lg font-medium text-white mb-2">
+                Chọn file Excel
+              </h5>
+              <p class="text-gray-400 text-sm">
+                Kéo thả file hoặc click để chọn<br />
+                <span class="text-blue-300">Chỉ chấp nhận file .xlsx</span>
+              </p>
+            </div>
+
+            <input
+              type="file"
+              id="fileInput"
+              accept=".xlsx"
+              class="hidden"
+              onchange="handleFileSelect(this)"
+            />
+
+            <!-- Selected File Info -->
+            <div
+              id="fileInfo"
+              class="hidden bg-gray-800 rounded-lg p-4 border border-gray-700"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-file-excel text-green-400 text-xl"></i>
+                  <div>
+                    <p id="fileName" class="font-medium text-white"></p>
+                    <p id="fileSize" class="text-sm text-gray-400"></p>
+                  </div>
+                </div>
+                <button
+                  onclick="removeFile()"
+                  class="text-gray-400 hover:text-white transition-colors"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
+              <h6 class="font-bold text-red-600 mb-2 flex items-center gap-2">
+                <i class="fas fa-info-circle"></i>
+                Yêu cầu file
+              </h6>
+              <ul class="ml-8 mtext-sm text-red-500 space-y-1">
+                <li>1. Tải template về:</li>
+                <li>2. Điền dữ liệu vào template từ dòng số 2</li>
+              </ul>
+
+              <h6
+                class="mt-4 font-bold text-blue-600 mb-2 flex items-center gap-2"
+              >
+                <i class="fas fa-exclamation-circle"></i>
+                Chú ý:
+              </h6>
+              <ul class="ml-8 mtext-sm text-blue-500 space-y-1">
+                <li>• File phải tuân theo template mẫu</li>
+                <li>• Dung lượng tối đa: 10MB</li>
+              </ul>
+            </div>
+          </div>
+          <!-- Download Template Button -->
+          <button
+            onclick="downloadTemplate()"
+            class="w-full text-center px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium shadow-lg transition-all duration-200 transform hover:scale-[1.02] gap-2"
+          >
+            <i class="fas fa-download"></i>
+            Tải Template
+          </button>
+          <!-- Import Button -->
+          <button
+            id="importButton"
+            onclick="importData()"
+            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            disabled
+          >
+            <i class="fas fa-upload mr-2"></i>
+            <span id="importButtonText">Import Thiết Bị</span>
+          </button>
+
+          <!-- Result Display -->
+          <div id="result" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function handleFileSelect(input) {
+        const file = input.files[0];
+        const fileInfo = document.getElementById("fileInfo");
+        const fileName = document.getElementById("fileName");
+        const fileSize = document.getElementById("fileSize");
+        const importButton = document.getElementById("importButton");
+        const importButtonText = document.getElementById("importButtonText");
+
+        if (file) {
+          // Kiểm tra định dạng file
+          if (!file.name.endsWith(".xlsx")) {
+            showAlert("Chỉ chấp nhận file .xlsx!", "error");
+            input.value = "";
+            return;
+          }
+
+          // Kiểm tra dung lượng file (tối đa 10MB)
+          if (file.size > 10 * 1024 * 1024) {
+            showAlert("File quá lớn! Dung lượng tối đa là 10MB.", "error");
+            input.value = "";
+            return;
+          }
+
+          // Hiển thị thông tin file
+          fileName.textContent = file.name;
+          fileSize.textContent = formatFileSize(file.size);
+          fileInfo.classList.remove("hidden");
+
+          // Kích hoạt nút import
+          importButton.disabled = false;
+          importButtonText.textContent = `Import ${file.name}`;
+        }
+      }
+
+      function removeFile() {
+        const fileInput = document.getElementById("fileInput");
+        const fileInfo = document.getElementById("fileInfo");
+        const importButton = document.getElementById("importButton");
+        const importButtonText = document.getElementById("importButtonText");
+
+        fileInput.value = "";
+        fileInfo.classList.add("hidden");
+        importButton.disabled = true;
+        importButtonText.textContent = "Import Thiết Bị";
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      async function importData() {
+        const fileInput = document.getElementById("fileInput");
+        const resultDiv = document.getElementById("result");
+        const importButton = document.getElementById("importButton");
+        const importButtonText = document.getElementById("importButtonText");
+
+        if (!fileInput.files[0]) {
+          showAlert("Vui lòng chọn file!", "warning");
+          return;
+        }
+
+        // Hiển thị trạng thái loading
+        importButton.disabled = true;
+        importButtonText.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-2"></i>Đang import...';
+
+        resultDiv.innerHTML = `
+                <div class="bg-blue-900/20 border border-blue-700 rounded-lg p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-spinner fa-spin text-blue-400"></i>
+                        <div>
+                            <p class="font-medium text-blue-300">Đang xử lý file...</p>
+                            <p class="text-sm text-blue-400">Vui lòng không đóng trang trong quá trình import</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        try {
+          const response = await fetch("/devices/import", {
+            method: "POST",
+            body: formData,
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            resultDiv.innerHTML = `
+                        <div class="bg-green-900/20 border border-green-700 rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                                <div>
+                                    <p class="font-medium text-green-300 text-lg">Import thành công!</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div class="bg-green-800/30 rounded p-3 text-center">
+                                    <p class="text-2xl font-bold text-green-300">${
+                                      result.success_count
+                                    }</p>
+                                    <p class="text-green-400">Thiết bị thành công</p>
+                                </div>
+                                <div class="bg-red-800/30 rounded p-3 text-center">
+                                    <p class="text-2xl font-bold text-red-300">${
+                                      result.error_count
+                                    }</p>
+                                    <p class="text-red-400">Lỗi</p>
+                                </div>
+                            </div>
+                            ${
+                              result.errors && result.errors.length > 0
+                                ? `
+                                <div class="mt-4">
+                                    <p class="font-medium text-yellow-300 mb-2">Chi tiết lỗi:</p>
+                                    <div class="bg-red-900/20 rounded p-3 max-h-32 overflow-y-auto">
+                                        ${result.errors
+                                          .map(
+                                            (error) =>
+                                              `<p class="text-red-300 text-sm">• ${error}</p>`
+                                          )
+                                          .join("")}
+                                    </div>
+                                </div>
+                            `
+                                : ""
+                            }
+                        </div>
+                    `;
+
+            showAlert(
+              `Import thành công ${result.success_count} thiết bị!`,
+              "success"
+            );
+
+            // Reset form sau khi import thành công
+            setTimeout(() => {
+              removeFile();
+            }, 2000);
+          } else {
+            resultDiv.innerHTML = `
+                        <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-times-circle text-red-400 text-xl"></i>
+                                <div>
+                                    <p class="font-medium text-red-300">Import thất bại!</p>
+                                    <p class="text-red-400">${
+                                      result.message ||
+                                      "Có lỗi xảy ra trong quá trình import"
+                                    }</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+            showAlert(result.message || "Import thất bại!", "error");
+          }
+        } catch (error) {
+          resultDiv.innerHTML = `
+                    <div class="bg-red-900/20 border border-red-700 rounded-lg p-4">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-times-circle text-red-400 text-xl"></i>
+                            <div>
+                                <p class="font-medium text-red-300">Lỗi kết nối!</p>
+                                <p class="text-red-400">${error.message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+          showAlert("Lỗi kết nối đến server!", "error");
+        } finally {
+          // Khôi phục trạng thái nút
+          importButton.disabled = false;
+          importButtonText.innerHTML =
+            '<i class="fas fa-upload mr-2"></i>Import Thiết Bị';
+        }
+      }
+
+      function downloadTemplate() {
+        // Trong thực tế, bạn có thể dùng:
+        window.location.href = "/devices/template";
+      }
+
+      function showAlert(message, type = "info") {
+        const alertContainer = document.getElementById("alertContainer");
+        const alert = document.createElement("div");
+        const typeClasses = {
+          success: "bg-green-500/20 border-green-500 text-green-300",
+          error: "bg-red-500/20 border-red-500 text-red-300",
+          warning: "bg-yellow-500/20 border-yellow-500 text-yellow-300",
+          info: "bg-blue-500/20 border-blue-500 text-blue-300",
+        };
+
+        alert.className = `p-4 rounded-lg border ${typeClasses[type]} mb-4 transition-all duration-300`;
+        alert.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span>${message}</span>
+                    <button class="text-lg hover:opacity-70 transition-opacity">&times;</button>
+                </div>
+            `;
+
+        alert.querySelector("button").addEventListener("click", () => {
+          alert.style.opacity = "0";
+          setTimeout(() => {
+            if (alert.parentNode) {
+              alert.remove();
+            }
+          }, 300);
+        });
+
+        alertContainer.appendChild(alert);
+
+        setTimeout(() => {
+          if (alert.parentNode) {
+            alert.style.opacity = "0";
+            setTimeout(() => {
+              if (alert.parentNode) {
+                alert.remove();
+              }
+            }, 300);
+          }
+        }, 5000);
+      }
+
+      // Cho phép kéo thả file
+      document.addEventListener("DOMContentLoaded", function () {
+        const dropArea = document.querySelector(".border-dashed");
+
+        ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+          dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+          dropArea.classList.add("border-blue-500", "bg-blue-500/10");
+        }
+
+        function unhighlight() {
+          dropArea.classList.remove("border-blue-500", "bg-blue-500/10");
+        }
+
+        dropArea.addEventListener("drop", handleDrop, false);
+
+        function handleDrop(e) {
+          const dt = e.dataTransfer;
+          const files = dt.files;
+          document.getElementById("fileInput").files = files;
+          handleFileSelect(document.getElementById("fileInput"));
+        }
+      });
+    </script>
+  </body>
+</html>

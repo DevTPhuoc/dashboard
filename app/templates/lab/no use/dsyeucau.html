@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh Sách Yêu Cầu Sửa Chữa</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        /* Timeline Styles - Dark Version */
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+            margin: 2rem 0;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #374151;
+        }
+        
+        .timeline-step {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        
+        .timeline-step:last-child {
+            margin-bottom: 0;
+        }
+        
+        .timeline-icon {
+            position: absolute;
+            left: -3rem;
+            top: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1f2937;
+            border: 2px solid #374151;
+            z-index: 2;
+        }
+        
+        .timeline-content {
+            background: #1f2937;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            border-left: 3px solid #374151;
+            color: #d1d5db;
+        }
+        
+        .timeline-step.past .timeline-icon {
+            background: #3b82f6;
+            border-color: #3b82f6;
+            color: white;
+        }
+        
+        .timeline-step.past .timeline-content {
+            border-left-color: #3b82f6;
+        }
+        
+        .timeline-step.active .timeline-icon {
+            background: #10b981;
+            border-color: #10b981;
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .timeline-step.active .timeline-content {
+            border-left-color: #10b981;
+            background: #064e3b;
+        }
+        
+        .timeline-step.future .timeline-icon {
+            background: #6b7280;
+            border-color: #6b7280;
+            color: white;
+        }
+        
+        .timeline-step.future .timeline-content {
+            border-left-color: #6b7280;
+        }
+        
+        .timeline-date {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            display: block;
+            margin-top: 0.5rem;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        
+        /* Status badges - Dark Version */
+        .status-badge {
+            padding: 0.35rem 0.65rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+            font-size: 0.75rem;
+        }
+        
+        .status-pending {
+            background-color: #78350f;
+            color: #fbbf24;
+        }
+        
+        .status-processing {
+            background-color: #1e3a8a;
+            color: #93c5fd;
+        }
+        
+        .status-completed {
+            background-color: #065f46;
+            color: #34d399;
+        }
+        
+        .status-cancelled {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+        }
+        
+        /* Priority badges - Dark Version */
+        .priority-high {
+            background-color: #7f1d1d;
+            color: #fca5a5;
+        }
+        
+        .priority-medium {
+            background-color: #78350f;
+            color: #fbbf24;
+        }
+        
+        .priority-low {
+            background-color: #065f46;
+            color: #34d399;
+        }
+        
+        /* Modal styles */
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-black text-white p-6">
+    <div class="space-y-6 text-gray-200">
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Header -->
+        <div class="flex flex-wrap justify-between items-center gap-4">
+            <h3 class="text-2xl font-bold flex items-center gap-2">
+                <i class="fas fa-tools text-blue-400"></i>
+                Danh Sách Yêu Cầu Sửa Chữa
+            </h3>
+            <button id="createRequestBtn" class="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 text-white shadow-md flex items-center gap-2 transition">
+                <i class="fas fa-plus-circle"></i> Tạo yêu cầu mới
+            </button>
+        </div>
+
+        <!-- Thanh công cụ filter -->
+        <div class="flex flex-wrap items-center gap-4">
+            <!-- Tìm kiếm -->
+            <div class="flex items-center gap-2">
+                <label for="searchInput" class="text-sm text-gray-300">Tìm kiếm:</label>
+                <input id="searchInput" type="text" placeholder="Mã yêu cầu, tên thiết bị..."
+                       class="p-2 rounded bg-gray-800 border border-gray-700 text-white w-64">
+                <button id="searchButton" class="p-2 text-gray-400 hover:text-white">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button id="clearSearchBtn" class="p-2 text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Lọc theo Lab -->
+            <div class="flex items-center gap-2">
+                <label for="labFilter" class="text-sm text-gray-300">Phòng Lab:</label>
+                <select id="labFilter" class="p-2 rounded bg-gray-800 border border-gray-700 text-white w-48">
+                    <option value="">Tất cả Lab</option>
+                </select>
+            </div>
+
+            <!-- Lọc theo trạng thái -->
+            <div class="flex items-center gap-2">
+                <span class="text-sm text-gray-300">Trạng thái:</span>
+                <div class="flex gap-1">
+                    <button class="filter-status px-3 py-1 rounded bg-blue-600 text-white text-sm active" data-status="all">Tất cả</button>
+                    <button class="filter-status px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm" data-status="Pending">Chờ xử lý</button>
+                
+                    <button class="filter-status px-3 py-1 rounded bg-gray-700 hover:bg-gray-600 text-sm" data-status="Completed">Hoàn thành</button>
+                </div>
+            </div>
+
+            <!-- Áp dụng bộ lọc -->
+            <button id="applyFilters" class="px-4 py-2 rounded bg-gray-700 hover:bg-gray-600 text-white flex items-center gap-2">
+                <i class="fas fa-filter"></i> Áp dụng bộ lọc
+            </button>
+        </div>
+
+        <!-- Danh sách yêu cầu sửa chữa -->
+        <div class="overflow-x-auto rounded-xl border border-gray-800 shadow-lg">
+            <table class="min-w-full text-sm text-gray-300 bg-gray-900">
+                <thead class="bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-blue-400">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Mã yêu cầu</th>
+                        <th class="px-4 py-3 text-left">Thiết bị</th>
+                        <th class="px-4 py-3 text-left">Mô tả sự cố</th>
+                        <th class="px-4 py-3 text-left">Lab</th>
+                        <th class="px-4 py-3 text-left">Người yêu cầu</th>
+                        <th class="px-4 py-3 text-left">Ngày yêu cầu</th>
+                        <th class="px-4 py-3 text-left">Độ ưu tiên</th>
+                        <th class="px-4 py-3 text-left">TAT (ngày)</th>
+                        <th class="px-4 py-3 text-left">Trạng thái</th>
+                        <th class="px-4 py-3 text-left">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="repairTableBody" class="divide-y divide-gray-800">
+                    <!-- JS render -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-6 flex justify-center">
+            <ul class="flex space-x-2" id="pagination">
+                <!-- JS sẽ render phân trang ở đây -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal chi tiết -->
+    <div id="detailModal" class="fixed inset-0 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" id="detailModalOverlay"></div>
+            <div id="detailModalContentWrapper" class="bg-gray-900 rounded-xl shadow-2xl w-full max-w-4xl transform transition-all scale-95 opacity-0 duration-200 max-h-screen overflow-y-auto relative z-10">
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b border-gray-700 px-6 py-4 sticky top-0 bg-gray-900 z-10">
+                    <h3 class="text-xl font-bold">Chi tiết yêu cầu sửa chữa</h3>
+                    <button id="closeDetailModal" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6" id="detailModalContent"></div>
+                <div class="flex justify-end gap-2 pt-4 border-t border-gray-700 px-6 py-4 sticky bottom-0 bg-gray-900">
+                    <button id="closeDetailModalBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white">Đóng</button>
+                    <button id="printDetail" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white">In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal cập nhật trạng thái -->
+    <div id="statusModal" class="fixed inset-0 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" id="statusModalOverlay"></div>
+            <div id="statusModalContentWrapper" class="bg-gray-900 rounded-xl shadow-2xl w-full max-w-md transform transition-all scale-95 opacity-0 duration-200 relative z-10">
+                <!-- Header -->
+                <div class="flex justify-between items-center border-b border-gray-700 px-6 py-4">
+                    <h3 class="text-xl font-bold">Cập nhật trạng thái</h3>
+                    <button id="closeStatusModal" class="text-gray-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="currentRequestId">
+                    <input type="hidden" id="deviceId">
+                    <!-- Trạng thái mới -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Trạng thái mới *</label>
+                        <select id="newStatus" class="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white" required>
+                            <option value="Completed">Hoàn thành</option>
+                            <option value="Cancelled">Hủy</option>
+                        </select>
+                    </div>
+                    <!-- Ghi chú -->
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Ghi chú (nếu có)</label>
+                        <textarea id="statusNote" rows="3" class="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white" placeholder="Nhập ghi chú..."></textarea>
+                    </div>
+                    <!-- Thông báo -->
+                    <div class="bg-blue-900/50 text-blue-300 p-3 rounded-lg text-sm border border-blue-700/50">
+                        <i class="fas fa-info-circle mr-1"></i> Khi chọn "Hoàn thành", trạng thái thiết bị sẽ được tự động chuyển về "Active".
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 pt-4 border-t border-gray-700 px-6 py-4">
+                    <button id="closeStatusModalBtn" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white">Hủy</button>
+                    <button id="saveStatus" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="/static/js/pages/pagination.js"></script>
+    <script src="/static/js/dsyeucau.js"></script>
+</body>
+</html>

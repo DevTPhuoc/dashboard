@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LM - Duyệt Yêu Cầu Sửa Chữa Nè</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .table-row-hover:hover {
+        background-color: rgba(55, 65, 81, 0.5);
+        transition: background-color 0.2s ease;
+      }
+      .status-badge {
+        padding: 0.35rem 0.65rem;
+        border-radius: 0.25rem;
+        font-weight: 500;
+        font-size: 0.75rem;
+      }
+      .status-waitlm {
+        background-color: #1e3a8a;
+        color: #93c5fd;
+      }
+      .status-quoting {
+        background-color: #065f46;
+        color: #34d399;
+      }
+      .status-rejected {
+        background-color: #7f1d1d;
+        color: #fca5a5;
+      }
+      .status-pendingevaluationagain {
+        background-color: #451a03;
+        color: #fdba74;
+      }
+      .tat-high {
+        color: #ef4444;
+        font-weight: bold;
+      }
+      .tat-medium {
+        color: #f59e0b;
+        font-weight: bold;
+      }
+      .tat-low {
+        color: #10b981;
+      }
+      .modal-content {
+        transform: scale(0.95);
+        opacity: 0;
+        transition: all 0.3s ease;
+      }
+      .modal.show .modal-content {
+        transform: scale(1);
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <div class="min-h-screen p-4 md:p-6">
+      <div class="space-y-6 text-gray-200 max-w-7xl mx-auto">
+        <!-- Alert Container -->
+        <div
+          id="alertContainer"
+          class="fixed top-4 right-4 z-50 max-w-md w-full space-y-2"
+        ></div>
+
+        <!-- Header -->
+        <div class="flex flex-wrap justify-between items-center gap-4">
+          <div class="flex items-center gap-3">
+            <div class="p-3 bg-purple-500/20 rounded-xl">
+              <i class="fas fa-user-shield text-purple-400 text-2xl"></i>
+            </div>
+            <div>
+              <h1
+                class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+              >
+                LM - Duyệt Yêu Cầu Sửa Chữa Nè
+              </h1>
+              <p class="text-gray-400 text-sm">
+                Lab Manager - Phê duyệt bước thứ hai
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button
+              id="refreshBtn"
+              class="px-4 py-2 rounded-xl bg-gradient-to-r from-green-500 to-green-600 hover:opacity-90 text-white shadow-lg flex items-center gap-2 transition-all transform hover:scale-105"
+            >
+              <i class="fas fa-refresh"></i>
+              <span class="hidden sm:inline">Làm mới</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="flex flex-wrap gap-2">
+          <button
+            class="filter-status px-4 py-2 rounded-xl bg-purple-600 text-white font-medium transition-all transform hover:scale-105"
+            data-status="WaitLM"
+          >
+            <i class="fas fa-clock mr-2"></i>Chờ duyệt LM
+          </button>
+          <button
+            class="filter-status px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-medium transition-all transform hover:scale-105"
+            data-status="Quoting"
+          >
+            <i class="fas fa-file-invoice-dollar mr-2"></i>Đã duyệt LM
+          </button>
+          <button
+            class="filter-status px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-medium transition-all transform hover:scale-105"
+            data-status="Rejected"
+          >
+            <i class="fas fa-times-circle mr-2"></i>Đã từ chối
+          </button>
+          <button
+            class="filter-status px-4 py-2 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-medium transition-all transform hover:scale-105"
+            data-status="all"
+          >
+            <i class="fas fa-list mr-2"></i>Tất cả
+          </button>
+        </div>
+
+        <!-- Bảng danh sách yêu cầu -->
+        <div
+          class="bg-gray-800 rounded-2xl border border-gray-700 shadow-xl overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-sm text-gray-300">
+              <thead class="bg-gradient-to-r from-purple-500/20 to-pink-600/20">
+                <tr>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Mã YC
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Thiết bị
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Người yêu cầu
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Mô tả sự cố
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Lab
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Ngày yêu cầu
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    TAT
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Trạng thái
+                  </th>
+                  <th
+                    class="px-6 py-4 text-left font-semibold text-purple-400 uppercase tracking-wider"
+                  >
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-700" id="requestsTableBody">
+                <!-- Dữ liệu sẽ được thêm bằng JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loadingState" class="hidden p-12 text-center">
+            <div class="inline-flex items-center justify-center">
+              <div
+                class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"
+              ></div>
+            </div>
+            <p class="mt-4 text-gray-400 text-lg">
+              Đang tải danh sách yêu cầu...
+            </p>
+          </div>
+
+          <!-- Empty State -->
+          <div id="emptyState" class="hidden p-12 text-center">
+            <div class="max-w-md mx-auto">
+              <div class="p-4 bg-gray-700 rounded-2xl inline-block mb-4">
+                <i class="fas fa-inbox text-4xl text-gray-500"></i>
+              </div>
+              <h3 class="text-xl font-semibold text-gray-300 mb-2">
+                Không có yêu cầu nào
+              </h3>
+              <p class="text-gray-400">
+                Không tìm thấy yêu cầu nào cần phê duyệt LM.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal duyệt yêu cầu LM -->
+    <div id="approvalModal" class="fixed inset-0 hidden z-50 overflow-y-auto">
+      <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div
+          class="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          id="approvalModalOverlay"
+        ></div>
+        <div
+          id="approvalModalContent"
+          class="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl transform transition-all scale-95 opacity-0 duration-300 max-h-screen overflow-y-auto relative z-10 border border-gray-700"
+        >
+          <!-- Header -->
+          <div
+            class="flex justify-between items-center border-b border-gray-700 px-8 py-6 sticky top-0 bg-gray-800 z-10"
+          >
+            <div class="flex items-center gap-3">
+              <div class="p-2 bg-purple-500/20 rounded-lg">
+                <i class="fas fa-user-shield text-purple-400 text-xl"></i>
+              </div>
+              <div>
+                <h3
+                  class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent"
+                >
+                  LM - Phê Duyệt Yêu Cầu
+                </h3>
+                <p class="text-gray-400 text-sm">
+                  Lab Manager - Bước phê duyệt thứ hai
+                </p>
+              </div>
+            </div>
+            <button
+              id="closeApprovalModal"
+              class="text-gray-400 hover:text-white transition p-2 hover:bg-gray-700 rounded-lg"
+            >
+              <i class="fas fa-times text-xl"></i>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="p-8 space-y-6">
+            <!-- Thông tin yêu cầu -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div class="bg-gray-700/50 rounded-xl p-6 border border-gray-600">
+                <h4
+                  class="text-purple-400 font-semibold text-lg mb-4 flex items-center gap-2"
+                >
+                  <i class="fas fa-info-circle"></i>
+                  Thông tin yêu cầu
+                </h4>
+                <div class="space-y-3">
+                  <div
+                    class="flex justify-between items-center py-2 border-b border-gray-600"
+                  >
+                    <span class="text-gray-400 font-medium">Mã yêu cầu:</span>
+                    <span
+                      id="requestId"
+                      class="text-white font-bold text-lg"
+                    ></span>
+                  </div>
+                  <div
+                    class="flex justify-between items-center py-2 border-b border-gray-600"
+                  >
+                    <span class="text-gray-400 font-medium">Thiết bị:</span>
+                    <span id="requestDevice" class="text-white"></span>
+                  </div>
+                  <div
+                    class="flex justify-between items-center py-2 border-b border-gray-600"
+                  >
+                    <span class="text-gray-400 font-medium">Phòng Lab:</span>
+                    <span id="requestLab" class="text-white"></span>
+                  </div>
+                  <div class="flex justify-between items-center py-2">
+                    <span class="text-gray-400 font-medium"
+                      >Người yêu cầu:</span
+                    >
+                    <span id="requestRequester" class="text-white"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-gray-700/50 rounded-xl p-6 border border-gray-600">
+                <h4
+                  class="text-purple-400 font-semibold text-lg mb-4 flex items-center gap-2"
+                >
+                  <i class="fas fa-cogs"></i>
+                  Thông tin bổ sung
+                </h4>
+                <div class="space-y-3">
+                  <div
+                    class="flex justify-between items-center py-2 border-b border-gray-600"
+                  >
+                    <span class="text-gray-400 font-medium">Ngày yêu cầu:</span>
+                    <span id="requestDate" class="text-white"></span>
+                  </div>
+                  <div
+                    class="flex justify-between items-center py-2 border-b border-gray-600"
+                  >
+                    <span class="text-gray-400 font-medium">Team:</span>
+                    <span id="requestTeam" class="text-white"></span>
+                  </div>
+                  <div class="flex justify-between items-center py-2">
+                    <span class="text-gray-400 font-medium"
+                      >Trạng thái hiện tại:</span
+                    >
+                    <span id="requestStatus" class="text-white"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mô tả sự cố -->
+            <div class="bg-gray-700/50 rounded-xl p-6 border border-gray-600">
+              <h4
+                class="text-purple-400 font-semibold text-lg mb-4 flex items-center gap-2"
+              >
+                <i class="fas fa-file-alt"></i>
+                Mô tả sự cố
+              </h4>
+              <div class="bg-gray-600/50 rounded-lg p-4">
+                <p
+                  id="requestDescription"
+                  class="text-gray-300 leading-relaxed"
+                ></p>
+              </div>
+            </div>
+            <!-- Mô tả sự cố -->
+            <div class="bg-gray-700/50 rounded-xl p-6 border border-gray-600">
+              <h4
+                class="text-purple-400 font-semibold text-lg mb-4 flex items-center gap-2"
+              >
+                <i class="fas fa-file-alt"></i>
+                Đánh giá sơ bộ của bộ phận kỹ thuật
+              </h4>
+              <div class="bg-gray-600/50 rounded-lg p-4">
+                <p id="requestNotes" class="text-gray-300 leading-relaxed"></p>
+              </div>
+            </div>
+
+            <!-- Form phê duyệt LM -->
+            <form id="approvalForm" class="space-y-6">
+              <input type="hidden" id="currentRequestId" />
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-3"
+                  >Quyết định LM *</label
+                >
+                <div class="flex gap-6">
+                  <label
+                    class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-600 hover:border-green-500 transition cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="action"
+                      value="approve"
+                      class="text-green-500 focus:ring-green-500"
+                      required
+                    />
+                    <span
+                      class="text-green-400 font-semibold flex items-center gap-2"
+                    >
+                      <i class="fas fa-check-circle"></i> Đồng ý (Chuyển báo
+                      giá)
+                    </span>
+                  </label>
+                  <label
+                    class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-600 hover:border-red-500 transition cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="action"
+                      value="reject"
+                      class="text-red-500 focus:ring-red-500"
+                      required
+                    />
+                    <span
+                      class="text-red-400 font-semibold flex items-center gap-2"
+                    >
+                      <i class="fas fa-times-circle"></i> Từ chối
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="commentField">
+                <label class="block text-sm font-semibold text-gray-300 mb-3"
+                  >Nhận xét / Ghi chú
+                  <span id="commentRequired" class="text-red-400 hidden"
+                    >*</span
+                  ></label
+                >
+                <textarea
+                  id="approvalComment"
+                  rows="4"
+                  class="w-full px-4 py-3 rounded-xl bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition resize-none"
+                  placeholder="Nhập nhận xét, lý do phê duyệt hoặc từ chối..."
+                ></textarea>
+              </div>
+
+              <!-- Thông tin workflow -->
+              <div
+                class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4"
+              >
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-info-circle text-purple-400 text-xl"></i>
+                  <div>
+                    <h5 class="font-semibold text-purple-400">
+                      Workflow Phê Duyệt
+                    </h5>
+                    <p class="text-purple-300 text-sm mt-1">
+                      EM → LM (Bạn) → Báo giá → Sửa chữa. Nếu từ chối, yêu cầu
+                      sẽ quay về EM.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Footer -->
+          <div
+            class="flex justify-end gap-3 pt-6 border-t border-gray-700 px-8 py-6 sticky bottom-0 bg-gray-800"
+          >
+            <button
+              id="closeApprovalModalBtn"
+              class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-white font-medium transition transform hover:scale-105"
+            >
+              <i class="fas fa-times mr-2"></i> Hủy
+            </button>
+            <button
+              id="submitApprovalBtn"
+              class="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:opacity-90 rounded-xl text-white font-medium transition transform hover:scale-105 flex items-center gap-2"
+            >
+              <i class="fas fa-check-circle"></i> Gửi phê duyệt LM
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+      // Biến toàn cục
+      let currentRequests = [];
+      let currentFilter = "WaitLM";
+      let sortTATDesc = true;
+
+      // Khởi tạo khi trang load
+      document.addEventListener("DOMContentLoaded", function () {
+        loadLMApprovalRequests();
+        setupEventListeners();
+      });
+
+      // Thiết lập event listeners
+      function setupEventListeners() {
+        // Refresh button
+        document
+          .getElementById("refreshBtn")
+          .addEventListener("click", loadLMApprovalRequests);
+
+        // Filter buttons
+        document.querySelectorAll(".filter-status").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            currentFilter = this.dataset.status;
+            updateFilterButtons();
+            filterRequests();
+          });
+        });
+
+        // Modal events
+        setupModalEvents();
+      }
+
+      // Cập nhật trạng thái nút filter
+      function updateFilterButtons() {
+        document.querySelectorAll(".filter-status").forEach((btn) => {
+          if (btn.dataset.status === currentFilter) {
+            btn.classList.remove("bg-gray-700", "hover:bg-gray-600");
+            btn.classList.add("bg-purple-600");
+          } else {
+            btn.classList.remove("bg-purple-600");
+            btn.classList.add("bg-gray-700", "hover:bg-gray-600");
+          }
+        });
+      }
+
+      // Tải danh sách yêu cầu cần LM approval
+      async function loadLMApprovalRequests() {
+        showLoadingState();
+
+        try {
+          // Load tất cả requests và filter những cái có status WaitLM (đã được EM duyệt)
+          const response = await fetch("/repair_requests");
+          if (!response.ok) throw new Error("Không thể tải danh sách yêu cầu");
+
+          const requests = await response.json();
+          // LM chỉ thấy các request có status WaitLM (đã được EM duyệt)
+          currentRequests = requests.filter(
+            (request) =>
+              request.Status === "WaitLM" ||
+              request.Status === "Quoting" ||
+              request.Status === "Rejected" ||
+              request.Status === "PendingEvaluationAgain"
+          );
+
+          renderRequestsTable(currentRequests);
+        } catch (error) {
+          console.error("Error loading requests:", error);
+          showAlert("error", "Lỗi khi tải danh sách yêu cầu: " + error.message);
+          showEmptyState();
+        }
+      }
+
+      // Hiển thị bảng requests
+      function renderRequestsTable(requests) {
+        const tbody = document.getElementById("requestsTableBody");
+        const emptyState = document.getElementById("emptyState");
+        const loadingState = document.getElementById("loadingState");
+
+        loadingState.classList.add("hidden");
+
+        if (requests.length === 0) {
+          tbody.innerHTML = "";
+          emptyState.classList.remove("hidden");
+          return;
+        }
+
+        emptyState.classList.add("hidden");
+
+        tbody.innerHTML = requests
+          .map((request) => {
+            return `
+                <tr class="table-row-hover animate-fade-in" data-request-id="${
+                  request.id
+                }">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="font-bold text-purple-400">RR-${
+                          request.id
+                        }</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="font-medium">${
+                          request.DeviceName || `Thiết bị ${request.DeviceID}`
+                        }</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-user text-gray-400"></i>
+                            <span>${request.RequestedBy}</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 max-w-xs">
+                        <div class="truncate" title="${
+                          request.Description || "Không có mô tả"
+                        }">${request.Description || "Không có mô tả"}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${request.LabName || "N/A"}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${new Date(request.RequestDate).toLocaleDateString(
+                          "vi-VI"
+                        )}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${calculateTAT(request.RequestDate)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="status-badge status-${request.Status.toLowerCase()}">
+                            ${getStatusText(request.Status)}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex gap-2">
+                            ${
+                              request.Status === "WaitLM"
+                                ? `
+                            <button class="approve-btn px-3 py-1.5 bg-green-600 hover:bg-green-500 rounded-lg text-white text-xs transition transform hover:scale-105" 
+                                    data-request-id="${request.id}">
+                                <i class="fas fa-check mr-1"></i> Duyệt
+                            </button>
+                            `
+                                : ""
+                            }
+                        </div>
+                    </td>
+                </tr>
+                `;
+          })
+          .join("");
+
+        // Thêm event listeners cho các nút
+        document.querySelectorAll(".approve-btn").forEach((btn) => {
+          btn.addEventListener("click", function () {
+            const requestId = this.dataset.requestId;
+            showApprovalModal(requestId);
+          });
+        });
+      }
+
+      // Tính TAT (Turn Around Time)
+      function calculateTAT(requestDate) {
+        const now = new Date();
+        const requestTime = new Date(requestDate);
+        const diffTime = now - requestTime;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor(
+          (diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+        );
+
+        let tatClass = "tat-low";
+        if (diffDays > 3) tatClass = "tat-high";
+        else if (diffDays > 1) tatClass = "tat-medium";
+
+        return `<span class="${tatClass}">${diffDays}d ${diffHours}h</span>`;
+      }
+
+      // Lấy text hiển thị cho status
+      function getStatusText(status) {
+        const statusMap = {
+          WaitLM: "Chờ duyệt LM",
+          Quoting: "Đang báo giá",
+          Rejected: "Đã từ chối",
+          PendingEvaluationAgain: "Chờ đánh giá lại",
+        };
+        return statusMap[status] || status;
+      }
+
+      // Xử lý sự kiện modal
+      function setupModalEvents() {
+        // Đóng modal
+        const closeModal = () => {
+          const modal = document.getElementById("approvalModal");
+          modal.classList.remove("show");
+          modal.classList.add("hidden");
+        };
+
+        document
+          .getElementById("closeApprovalModal")
+          .addEventListener("click", closeModal);
+        document
+          .getElementById("closeApprovalModalBtn")
+          .addEventListener("click", closeModal);
+        document
+          .getElementById("approvalModalOverlay")
+          .addEventListener("click", closeModal);
+
+        // Submit approval
+        document
+          .getElementById("submitApprovalBtn")
+          .addEventListener("click", submitLMApproval);
+
+        // Radio button change
+        document.querySelectorAll('input[name="action"]').forEach((radio) => {
+          radio.addEventListener("change", function () {
+            const commentRequired = document.getElementById("commentRequired");
+            if (this.value === "reject") {
+              commentRequired.classList.remove("hidden");
+              document.getElementById("approvalComment").required = true;
+            } else {
+              commentRequired.classList.add("hidden");
+              document.getElementById("approvalComment").required = false;
+            }
+          });
+        });
+      }
+
+      // Hiển thị modal phê duyệt
+      function showApprovalModal(requestId) {
+        const request = currentRequests.find((r) => r.id == requestId);
+        if (!request) return;
+        const evaluationEvent = (request.Timeline || []).find(
+          (event) => event.event === "TechnicianEvaluation"
+        );
+        const noteText = evaluationEvent
+          ? evaluationEvent.notes || "Không có ghi chú"
+          : "Chưa có đánh giá";
+        // Điền thông tin vào modal
+        document.getElementById("currentRequestId").value = requestId;
+        document.getElementById("requestId").textContent = `RR-${request.id}`;
+        document.getElementById("requestDevice").textContent =
+          request.DeviceName || `Thiết bị ${request.DeviceID}`;
+        document.getElementById("requestLab").textContent =
+          request.LabName || "N/A";
+        document.getElementById("requestTeam").textContent =
+          request.TeamName || "N/A";
+        document.getElementById("requestRequester").textContent =
+          request.RequestedBy;
+        document.getElementById("requestDate").textContent = new Date(
+          request.RequestDate
+        ).toLocaleDateString("vi-VI");
+        document.getElementById("requestStatus").textContent = getStatusText(
+          request.Status
+        );
+        document.getElementById("requestDescription").textContent =
+          request.Description || "Không có mô tả";
+        document.getElementById("requestNotes").textContent = noteText;
+        // Reset form
+        document.getElementById("approvalForm").reset();
+        document.getElementById("commentRequired").classList.add("hidden");
+        document.getElementById("approvalComment").required = false;
+
+        // Hiển thị modal
+        const modal = document.getElementById("approvalModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("show");
+
+        setTimeout(() => {
+          document.getElementById("approvalModalContent").style.transform =
+            "scale(1)";
+          document.getElementById("approvalModalContent").style.opacity = "1";
+        }, 10);
+      }
+
+      // Gửi phê duyệt LM
+      async function submitLMApproval() {
+        const requestId = document.getElementById("currentRequestId").value;
+        const action = document.querySelector('input[name="action"]:checked');
+        const comment = document.getElementById("approvalComment").value;
+        const approver_role = "LM";
+
+        if (!action) {
+          showAlert("warning", "Vui lòng chọn quyết định");
+          return;
+        }
+
+        // Nếu là reject thì bắt buộc có comment
+        if (action.value === "reject" && !comment.trim()) {
+          showAlert("warning", "Vui lòng nhập lý do từ chối");
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `/repair_requests/approve_requests/${requestId}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                action: action.value,
+                comment: comment.trim(),
+                approver_role: approver_role,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Lỗi khi gửi phê duyệt");
+          }
+
+          const result = await response.json();
+          showAlert("success", result.message || "Đã gửi phê duyệt thành công");
+
+          // Đóng modal và reload danh sách
+          document.getElementById("approvalModal").classList.add("hidden");
+          loadLMApprovalRequests();
+        } catch (error) {
+          console.error("Error submitting approval:", error);
+          showAlert("error", "Lỗi khi gửi phê duyệt: " + error.message);
+        }
+      }
+
+      // Lọc requests
+      function filterRequests() {
+        const searchTerm = document
+          .getElementById("searchRequest")
+          .value.toLowerCase();
+
+        let filtered = currentRequests;
+
+        // Lọc theo status
+        if (currentFilter !== "all") {
+          filtered = filtered.filter(
+            (request) => request.Status === currentFilter
+          );
+        }
+
+        // Lọc theo search term
+        if (searchTerm) {
+          filtered = filtered.filter(
+            (request) =>
+              (request.Description || "").toLowerCase().includes(searchTerm) ||
+              (request.DeviceName || "").toLowerCase().includes(searchTerm) ||
+              request.RequestedBy.toLowerCase().includes(searchTerm) ||
+              `RR-${request.id}`.includes(searchTerm)
+          );
+        }
+
+        renderRequestsTable(filtered);
+      }
+
+      // Hiển thị trạng thái loading
+      function showLoadingState() {
+        document.getElementById("loadingState").classList.remove("hidden");
+        document.getElementById("emptyState").classList.add("hidden");
+        document.getElementById("requestsTableBody").innerHTML = "";
+      }
+
+      // Hiển thị trạng thái empty
+      function showEmptyState() {
+        document.getElementById("loadingState").classList.add("hidden");
+        document.getElementById("emptyState").classList.remove("hidden");
+        document.getElementById("requestsTableBody").innerHTML = "";
+      }
+
+      // Hiển thị alert
+      function showAlert(type, message) {
+        const alertContainer = document.getElementById("alertContainer");
+        const alertId = "alert-" + Date.now();
+
+        const icons = {
+          success: "fa-check-circle",
+          error: "fa-exclamation-circle",
+          warning: "fa-exclamation-triangle",
+          info: "fa-info-circle",
+        };
+
+        const colors = {
+          success: "bg-green-500/20 border-green-500/50 text-green-300",
+          error: "bg-red-500/20 border-red-500/50 text-red-300",
+          warning: "bg-yellow-500/20 border-yellow-500/50 text-yellow-300",
+          info: "bg-purple-500/20 border-purple-500/50 text-purple-300",
+        };
+
+        const alert = document.createElement("div");
+        alert.id = alertId;
+        alert.className = `${colors[type]} border rounded-xl p-4 flex items-center gap-3 animate-fade-in shadow-lg`;
+        alert.innerHTML = `
+                <i class="fas ${icons[type]} text-lg"></i>
+                <div class="flex-1 whitespace-pre-wrap">${message}</div>
+                <button class="text-gray-400 hover:text-white" onclick="document.getElementById('${alertId}').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+        alertContainer.appendChild(alert);
+
+        // Tự động xóa sau 5 giây
+        setTimeout(() => {
+          if (document.getElementById(alertId)) {
+            document.getElementById(alertId).remove();
+          }
+        }, 5000);
+      }
+    </script>
+  </body>
+</html>

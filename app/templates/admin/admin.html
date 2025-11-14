@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Admin CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/admin.css') }}" />
+
+  <!-- custom scrollbar -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/components/scrollbar-custom.css') }}"
+    />
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  
+  <div class="min-h-screen p-4 lg:p-8">
+    <div class="max-w-7xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-8">
+        <h1 class="text-3xl lg:text-4xl font-bold text-white mb-2">Quản trị hệ thống</h1>
+        <p class="text-gray-400 text-lg">Quản lý người dùng, phân quyền và cấu hình hệ thống</p>
+      </div>
+
+      <!-- Messages Container -->
+      <div id="admin-messages" class="mb-6"></div>
+
+      <!-- Grid Layout: 4 cards vertically -->
+      <div class="space-y-6">
+        
+        <!-- Role Management Card -->
+        <div class="admin-card admin-glass-bg border border-white/10 rounded-2xl transition-all duration-300 hover:border-blue-500/30 hover:shadow-lg hover:shadow-blue-500/10">
+          <!-- Card Header - Fixed -->
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-white/10">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-purple-600/20 border border-blue-500/30 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-user-tag text-blue-400 text-xl"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-semibold text-white">Quản lý Role</h2>
+                <p class="text-gray-400 text-sm">Thêm, xóa và quản lý vai trò</p>
+              </div>
+            </div>
+            <button class="card-toggle text-gray-400 hover:text-white transition-colors" aria-expanded="false">
+              <i class="fas fa-chevron-down toggle-icon"></i>
+            </button>
+          </div>
+          
+          <!-- Card Content - Scrollable -->
+          <div class="card-content collapsed p-6 pt-4 max-h-64 overflow-y-auto">
+            <!-- Add Role Form -->
+            <form class="admin-ajax-form flex gap-3 mb-6" method="post" action="{{ url_for('admin.add_role') }}">
+              <input 
+                type="text" 
+                name="role_name" 
+                placeholder="Tên role mới" 
+                required
+                maxlength="50"
+                class="admin-glass-input flex-1 px-4 py-3 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+              />
+              <button type="submit" class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all">
+                <i class="fas fa-plus mr-2"></i>Thêm
+              </button>
+            </form>
+            
+            <!-- Roles List -->
+            <div class="flex flex-wrap gap-3">
+              {% for role in roles %}
+                <div class="flex items-center bg-blue-500/10 border border-blue-500/30 px-4 py-2 rounded-lg">
+                  <span class="text-blue-400 font-medium">{{ role.name }}</span>
+                  {% if role.name != 'admin' %}
+                  <form class="admin-ajax-form ml-3" method="post" action="{{ url_for('admin.delete_role', role_id=role.id) }}">
+                    <button type="submit" class="text-red-400 hover:text-red-300 transition-colors">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </form>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- User Management Card -->
+        <div class="admin-card admin-glass-bg border border-white/10 rounded-2xl transition-all duration-300 hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10">
+          <!-- Card Header - Fixed -->
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-white/10">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-pink-600/20 border border-purple-500/30 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-users text-purple-400 text-xl"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-semibold text-white">Quản lý User</h2>
+                <p class="text-gray-400 text-sm">Thêm, xóa và phân quyền users</p>
+              </div>
+            </div>
+            <button class="card-toggle text-gray-400 hover:text-white transition-colors" aria-expanded="false">
+              <i class="fas fa-chevron-down toggle-icon"></i>
+            </button>
+          </div>
+          
+          <!-- Card Content - Scrollable -->
+          <div class="card-content collapsed p-6 pt-4 max-h-80 overflow-y-auto">
+            <!-- Add User Form -->
+            <form class="admin-ajax-form grid grid-cols-1 md:grid-cols-2 gap-3 mb-6" method="post" action="{{ url_for('admin.add_user') }}">
+              <input 
+                type="text" 
+                name="username" 
+                placeholder="Tên đăng nhập" 
+                required
+                maxlength="50"
+                class="admin-glass-input px-4 py-3 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
+              />
+              <input 
+                type="password" 
+                name="password" 
+                placeholder="Mật khẩu" 
+                required
+                class="admin-glass-input px-4 py-3 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
+              />
+              <select name="role_id" class="admin-glass-input px-4 py-3 border border-white/10 rounded-lg text-white focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all">
+                {% for role in roles %}
+                  <option value="{{ role.id }}" class="bg-slate-800">{{ role.name }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-600 hover:to-pink-700 transition-all">
+                <i class="fas fa-user-plus mr-2"></i>Thêm User
+              </button>
+            </form>
+            
+            <!-- Search User -->
+            <div class="mb-4">
+              <input 
+                type="text" 
+                id="userSearch" 
+                placeholder="Tìm kiếm user..." 
+                class="admin-glass-input w-full px-4 py-3 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-purple-500/50 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all"
+              />
+            </div>
+            
+            <!-- Users Table -->
+            <div class="admin-glass-table rounded-lg overflow-hidden border border-white/10">
+              <div class="overflow-x-auto">
+                <table class="min-w-full" id="usersTable">
+                  <thead class="bg-white/5">
+                    <tr>
+                      <th class="py-3 px-4 text-left text-gray-300 font-medium">ID</th>
+                      <th class="py-3 px-4 text-left text-gray-300 font-medium">Tên đăng nhập</th>
+                      <th class="py-3 px-4 text-left text-gray-300 font-medium">Quyền</th>
+                      <th class="py-3 px-4 text-left text-gray-300 font-medium">Đổi quyền</th>
+                      <th class="py-3 px-4 text-left text-gray-300 font-medium">Xóa</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-white/10">
+                    {% for user in users %}
+                    <tr class="hover:bg-white/5 transition-colors user-row" data-username="{{ user.username.lower() }}">
+                      <td class="py-3 px-4 text-gray-300">{{ user.id }}</td>
+                      <td class="py-3 px-4 text-white font-medium">{{ user.username }}</td>
+                      <td class="py-3 px-4">
+                        <span class="inline-flex px-3 py-1 rounded-full text-xs font-medium
+                          {% if user.role.name == 'admin' %}bg-purple-500/20 text-purple-400 border border-purple-500/30
+                          {% elif user.role.name == 'user' %}bg-blue-500/20 text-blue-400 border border-blue-500/30
+                          {% else %}bg-gray-500/20 text-gray-400 border border-gray-500/30{% endif %}">
+                          {{ user.role.name }}
+                        </span>
+                      </td>
+                      <td class="py-3 px-4">
+                        <form class="admin-ajax-form flex gap-2 items-center" method="post" action="{{ url_for('admin.set_role', user_id=user.id) }}">
+                          <select name="role_id" class="admin-glass-input px-2 py-1 border border-white/10 rounded text-white text-sm focus:border-blue-500/50 focus:outline-none">
+                            {% for role in roles %}
+                              <option value="{{ role.id }}" {% if user.role.id == role.id %}selected{% endif %} class="bg-slate-800">{{ role.name }}</option>
+                            {% endfor %}
+                          </select>
+                          <button type="submit" class="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 px-3 py-1 rounded border border-blue-500/30 text-sm transition-all">
+                            Cập nhật
+                          </button>
+                        </form>
+                      </td>
+                      <td class="py-3 px-4">
+                        {% if user.username != 'admin' %}
+                        <form class="admin-ajax-form" method="post" action="{{ url_for('admin.delete_user', user_id=user.id) }}">
+                          <button type="submit" class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-3 py-1 rounded border border-red-500/30 text-sm transition-all">
+                            Xóa
+                          </button>
+                        </form>
+                        {% else %}
+                        <span class="text-gray-500 text-sm">Không thể xóa</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Pages Permission Card -->
+        <div class="admin-card admin-glass-bg border border-white/10 rounded-2xl transition-all duration-300 hover:border-green-500/30 hover:shadow-lg hover:shadow-green-500/10">
+          <!-- Card Header - Fixed -->
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-white/10">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-user-lock text-green-400 text-xl"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-semibold text-white">Phân quyền User</h2>
+                <p class="text-gray-400 text-sm">Gán trang cho từng user cụ thể</p>
+              </div>
+            </div>
+            <button class="card-toggle text-gray-400 hover:text-white transition-colors" aria-expanded="false">
+              <i class="fas fa-chevron-down toggle-icon"></i>
+            </button>
+          </div>
+          
+          <!-- Card Content - Scrollable -->
+          <div class="card-content collapsed p-6 pt-4 max-h-96 overflow-y-auto">
+            <!-- User Filter -->
+            <div class="mb-4 flex gap-3">
+              <input 
+                type="text" 
+                id="userPermissionSearch" 
+                placeholder="Tìm kiếm user..." 
+                class="admin-glass-input flex-1 px-4 py-3 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all"
+              />
+              <select id="userPermissionFilter" class="admin-glass-input px-4 py-3 border border-white/10 rounded-lg text-white focus:border-green-500/50 focus:outline-none focus:ring-2 focus:ring-green-500/20 transition-all">
+                <option value="">Tất cả users</option>
+                {% for user in users %}
+                  <option value="{{ user.id }}" class="bg-slate-800">{{ user.username }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <!-- User Permission Forms -->
+            <div id="userPermissionForms">
+              {% for user in users %}
+                <form class="admin-ajax-form mb-6 pb-4 border-b border-white/10 last:border-b-0 user-permission-form" 
+                      method="post" 
+                      action="{{ url_for('admin.set_user_pages', user_id=user.id) }}"
+                      data-user-id="{{ user.id }}"
+                      data-username="{{ user.username.lower() }}">
+                  
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="font-semibold text-green-400 flex items-center">
+                      <i class="fas fa-user mr-2"></i>{{ user.username }}
+                      <span class="ml-2 text-xs text-gray-500">({{ user.role.name }})</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button type="button" class="select-all-pages bg-green-500/20 hover:bg-green-500/30 text-green-400 px-3 py-1 rounded border border-green-500/30 text-sm transition-all">
+                        Chọn tất cả
+                      </button>
+                      <button type="button" class="clear-all-pages bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 px-3 py-1 rounded border border-gray-500/30 text-sm transition-all">
+                        Bỏ chọn tất cả
+                      </button>
+                      <button type="submit" class="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-4 py-1 rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition-all text-sm">
+                        <i class="fas fa-save mr-1"></i>Lưu
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {% for page in pages %}
+                      <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          name="page_ids" 
+                          value="{{ page.id }}"
+                          class="admin-checkbox w-4 h-4 rounded focus:ring-2 focus:ring-green-500/20"
+                          {% if page in user.pages %}checked{% endif %}
+                        />
+                        <span class="text-gray-300 text-sm">
+                          {% if page.parent %}<i class="fas fa-arrow-right text-gray-500 mr-1 text-xs"></i>{% endif %}
+                          {{ page.name }}
+                        </span>
+                      </label>
+                    {% endfor %}
+                  </div>
+                </form>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Role Pages Permission Card -->
+        <div class="admin-card admin-glass-bg border border-white/10 rounded-2xl transition-all duration-300 hover:border-orange-500/30 hover:shadow-lg hover:shadow-orange-500/10">
+          <!-- Card Header - Fixed -->
+          <div class="flex items-center justify-between p-6 pb-4 border-b border-white/10">
+            <div class="flex items-center">
+              <div class="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-red-600/20 border border-orange-500/30 rounded-xl flex items-center justify-center mr-4">
+                <i class="fas fa-key text-orange-400 text-xl"></i>
+              </div>
+              <div>
+                <h2 class="text-xl font-semibold text-white">Phân quyền Role</h2>
+                <p class="text-gray-400 text-sm">Gán trang cho từng role</p>
+              </div>
+            </div>
+            <button class="card-toggle text-gray-400 hover:text-white transition-colors" aria-expanded="false">
+              <i class="fas fa-chevron-down toggle-icon"></i>
+            </button>
+          </div>
+          
+          <!-- Card Content - Scrollable -->
+          <div class="card-content collapsed p-6 pt-4 max-h-96 overflow-y-auto">
+            <!-- Role Filter -->
+            <div class="mb-4">
+              <select id="rolePermissionFilter" class="admin-glass-input w-full px-4 py-3 border border-white/10 rounded-lg text-white focus:border-orange-500/50 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition-all">
+                <option value="">Tất cả roles</option>
+                {% for role in roles %}
+                  <option value="{{ role.id }}" class="bg-slate-800">{{ role.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <!-- Role Permission Forms -->
+            <div id="rolePermissionForms">
+              {% for role in roles %}
+                <form class="admin-ajax-form mb-6 pb-4 border-b border-white/10 last:border-b-0 role-permission-form" 
+                      method="post" 
+                      action="{{ url_for('admin.set_role_pages', role_id=role.id) }}"
+                      data-role-id="{{ role.id }}">
+                  
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="font-semibold text-orange-400 flex items-center">
+                      <i class="fas fa-user-tag mr-2"></i>{{ role.name }}
+                      <span class="ml-2 text-xs text-gray-500">({{ role.users|length }} users)</span>
+                    </div>
+                    <div class="flex gap-2">
+                      <button type="button" class="select-all-pages bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 px-3 py-1 rounded border border-orange-500/30 text-sm transition-all">
+                        Chọn tất cả
+                      </button>
+                      <button type="button" class="clear-all-pages bg-gray-500/20 hover:bg-gray-500/30 text-gray-400 px-3 py-1 rounded border border-gray-500/30 text-sm transition-all">
+                        Bỏ chọn tất cả
+                      </button>
+                      <button type="submit" class="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-1 rounded-lg font-medium hover:from-orange-600 hover:to-red-700 transition-all text-sm">
+                        <i class="fas fa-save mr-1"></i>Lưu
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {% for page in pages %}
+                      <label class="flex items-center gap-2 p-2 rounded-lg hover:bg-white/5 transition-colors cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          name="page_ids" 
+                          value="{{ page.id }}"
+                          class="admin-checkbox w-4 h-4 rounded focus:ring-2 focus:ring-orange-500/20"
+                          {% if page in role.pages %}checked{% endif %}
+                        />
+                        <span class="text-gray-300 text-sm">
+                          {% if page.parent %}<i class="fas fa-arrow-right text-gray-500 mr-1 text-xs"></i>{% endif %}
+                          {{ page.name }}
+                        </span>
+                      </label>
+                    {% endfor %}
+                  </div>
+                </form>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin JavaScript -->
+  <script src="{{ url_for('static', filename='js/pages/admin.js') }}"></script>
+</body>
+</html>

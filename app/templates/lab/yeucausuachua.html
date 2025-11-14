@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yêu Cầu Sửa Chữa Thiết Bị</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#3b82f6",
+              secondary: "#6b7280",
+              success: "#10b981",
+              danger: "#ef4444",
+              warning: "#f59e0b",
+              dark: "#111827",
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+  <body class="">
+    <div class="bg-black text-white p-2">
+      <div class="text-gray-200">
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Header -->
+        <div class="pb-2">
+          <h2
+            class="text-3xl font-bold flex items-center gap-2 border-b-4 border-blue-300 text-white"
+          >
+            <i class="fas fa-tools text-blue-400"></i>
+            Request Repair Equipment
+          </h2>
+        </div>
+
+        <!-- Form yêu cầu sửa chữa -->
+        <div
+          class="bg-gray-900 rounded border border-gray-800 shadow-lg overflow-hidden"
+        >
+          <!-- Header -->
+          <div
+            class="bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-gray-300"
+          >
+            <h5 class="right-3 text-lg font-semibold text-white-400">
+              Information about repair request
+            </h5>
+          </div>
+
+          <!-- Body -->
+          <div class="p-3">
+            <form id="repairRequestForm" class="space-y-4">
+              <!-- Chọn Lab và Team -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm mb-2">
+                    Choose Department <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    class="w-full p-2 rounded bg-gray-800 border border-gray-700 text-sm text-white"
+                    id="labSelect"
+                    name="lab_id"
+                    required
+                  >
+                    <option value="">-- Choose Department --</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm mb-2">
+                    Choose Team <span class="text-red-500">*</span>
+                  </label>
+                  <select
+                    class="w-full p-2 rounded bg-gray-800 border border-gray-700 text-sm text-white"
+                    id="teamSelect"
+                    name="team_id"
+                    required
+                    disabled
+                  >
+                    <option value="">-- Choose Team --</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Chọn thiết bị với tìm kiếm -->
+              <div>
+                <label class="block text-sm mb-1">Choose Equipment</label>
+                <div class="space-y-1">
+                  <!-- Thanh tìm kiếm -->
+                  <div class="relative">
+                    <input
+                      type="text"
+                      id="deviceSearch"
+                      placeholder="Search devices..."
+                      class="w-full p-2 rounded bg-gray-800 border border-gray-700 text-sm text-white pr-10"
+                    />
+                    <i
+                      class="fas fa-search absolute right-3 top-3 text-gray-400"
+                    ></i>
+                  </div>
+
+                  <!-- Danh sách thiết bị -->
+                  <div
+                    class="max-h-50 overflow-y-auto border border-gray-700 rounded bg-gray-800"
+                  >
+                    <div id="deviceList" class="p-2 space-y-1">
+                      <div class="text-center text-sm py-4 text-gray-500">
+                        -- Choose Department and Team to display devices --
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Nút thêm thiết bị -->
+                  <button
+                    type="button"
+                    class="px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 hover:bg-blue-800 rounded text-white text-sm flex items-center gap-2"
+                    id="addSelectedDevicesBtn"
+                  >
+                    <i class="fas fa-plus"></i> Add Selected Equipments
+                  </button>
+                </div>
+                <p class="text-gray-400 text-sm mt-1">
+                  Select one or more equipments and click "Add Selected
+                  Equipments"
+                </p>
+              </div>
+
+              <!-- Thiết bị đã chọn -->
+              <div>
+                <label class="block text-sm mb-2">
+                  Equipments are chosen <span class="text-red-500">*</span>
+                </label>
+                <div id="selectedDevicesContainer" class="space-y-3">
+                  <!-- Danh sách thiết bị sẽ được thêm vào đây bằng JavaScript -->
+                  <div
+                    class="text-center py-4 text-gray-500 border border-dashed border-gray-700 rounded 2xl:min-h-48"
+                  >
+                    <i class="fas fa-desktop text-sm mb-2"></i>
+                    <p>No equipments have been selected yet.</p>
+                  </div>
+                </div>
+                <p class="text-gray-400 text-sm mt-1">
+                  Enter a problem description for each equipment
+                </p>
+              </div>
+
+              <!-- Nút hành động -->
+              <div class="flex gap-1">
+                <button
+                  type="submit"
+                  class="px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm text-white flex items-center gap-2"
+                >
+                  <i class="fas fa-paper-plane"></i> Submit Request
+                </button>
+                <button
+                  type="reset"
+                  class="px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white flex items-center gap-2"
+                >
+                  <i class="fas fa-redo"></i> Reset
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal thành công -->
+      <div id="successModal" class="fixed inset-0 hidden z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+          <div
+            class="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            id="successModalOverlay"
+          ></div>
+          <div
+            id="successModalContent"
+            class="bg-gray-900 rounded-xl shadow-2xl w-full max-w-md transform transition-all scale-95 opacity-0 duration-200 relative z-10"
+          >
+            <!-- Header -->
+            <div
+              class="flex justify-between items-center border-b border-gray-700 px-6 py-4"
+            >
+              <h3 class="text-xl font-bold text-green-400">Succsess</h3>
+              <button
+                id="closeSuccessModalBtn"
+                class="text-gray-400 hover:text-white"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 text-center">
+              <i class="fas fa-check-circle text-green-500 text-5xl mb-4"></i>
+              <h4 class="text-lg font-semibold mb-2">
+                Your Request has been submitted!
+              </h4>
+              <p class="text-gray-400">
+                Request ID:
+                <span id="successRequestId" class="font-bold text-white"></span>
+              </p>
+            </div>
+
+            <!-- Footer -->
+            <div
+              class="flex justify-end pt-4 border-t border-gray-700 px-6 py-4"
+            >
+              <a
+                href="{{ url_for('my_request') }}"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white"
+                >View Request List</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const userTeamId = "{{ current_user.idteam }}";
+      const userLabId = "{{ current_user.idlab }}";
+      const userRoleId = "{{ current_user.role_id }}";
+    </script>
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/yeucausuachua.js') }}"></script>
+  </body>
+</html>

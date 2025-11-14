@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .timeline-container {
+            position: relative;
+            padding: 1rem 0;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 1.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, 
+                #3b82f6 0%, 
+                #8b5cf6 25%, 
+                #f59e0b 50%, 
+                #10b981 75%, 
+                #ef4444 100%);
+            border-radius: 1px;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.25rem;
+            padding-left: 3rem;
+            transition: all 0.3s ease;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 1.25rem;
+            top: 0.5rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid #1f2937;
+            z-index: 2;
+            transition: all 0.3s ease;
+        }
+        .timeline-dot.waiting {
+            background: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+        }
+        .timeline-dot.processing {
+            background: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+        }
+        .timeline-dot.repair {
+            background: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        .timeline-dot.done {
+            background: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+        .timeline-dot.cancelled {
+            background: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+        }
+        .timeline-content {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .timeline-content::before {
+            content: '';
+            position: absolute;
+            left: -0.5rem;
+            top: 0.75rem;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: #1f2937;
+            border-left: 1px solid #374151;
+            border-bottom: 1px solid #374151;
+            transform: rotate(45deg);
+        }
+        .timeline-item:hover .timeline-content {
+            border-color: #4b5563;
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .timeline-item:hover .timeline-dot {
+            transform: scale(1.1);
+        }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .badge-waiting { background: #fef3c7; color: #92400e; }
+        .badge-processing { background: #f3e8ff; color: #6b21a8; }
+        .badge-repair { background: #dbeafe; color: #1e40af; }
+        .badge-done { background: #d1fae5; color: #065f46; }
+        .badge-cancelled { background: #fee2e2; color: #991b1b; }
+        .time-text {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .note-box {
+            background: rgba(55, 65, 81, 0.5);
+            border-left: 3px solid;
+            border-radius: 0.375rem;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        .note-waiting { border-left-color: #f59e0b; }
+        .note-processing { border-left-color: #8b5cf6; }
+        .note-repair { border-left-color: #3b82f6; }
+        .note-done { border-left-color: #10b981; }
+        .note-cancelled { border-left-color: #ef4444; }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading-spinner {
+            border: 2px solid #374151;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="max-w-2xl mx-auto p-4">
+        <div class="timeline-container">
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-8">
+                <div class="loading-spinner mx-auto mb-3"></div>
+                <p class="text-gray-400 text-sm">Đang tải dữ liệu timeline...</p>
+            </div>
+
+            <!-- Timeline Line -->
+            <div class="timeline-line"></div>
+
+            <!-- Timeline Content -->
+            <div id="timelineContent" class="space-y-4"></div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden text-center py-8">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl mb-3"></i>
+                <p class="text-gray-400">Không thể tải dữ liệu timeline</p>
+                <button onclick="loadTimeline()" class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded text-sm transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Thử lại
+                </button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-8">
+                <i class="fas fa-clock text-gray-500 text-2xl mb-3"></i>
+                <p class="text-gray-400">Chưa có lịch sử thay đổi</p>
+                <p class="text-gray-500 text-sm mt-1">Mọi thay đổi trạng thái sẽ hiển thị ở đây</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Hàm load timeline từ API
+        async function loadTimeline() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestId = urlParams.get('request_id');
+            
+            // Hiển thị loading
+            showLoading();
+            
+            if (!requestId) {
+                showError('Thiếu request_id');
+                return;
+            }
+
+            try {
+                // Gọi API để lấy dữ liệu timeline
+                const response = await fetch(`/timeline/by_repair_request_id?repair_request_id=${requestId}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const timelineData = await response.json();
+                const data = timelineData.data || timelineData || [];
+                
+                renderTimeline(data);
+                
+            } catch (error) {
+                console.error('Error loading timeline:', error);
+                showError('Không thể tải dữ liệu timeline');
+            }
+        }
+
+        // Hàm render timeline - SỬA LẠI
+function renderTimeline(data) {
+    const container = document.getElementById('timelineContent');
+    
+    if (data.length === 0) {
+        showEmpty();
+        return;
+    }
+
+    // Ẩn loading
+    hideLoading();
+
+    // Sắp xếp timeline theo thời gian (cũ -> mới)
+    const sortedTimeline = data.sort((a, b) => new Date(a.change_timestamp) - new Date(b.change_timestamp));
+
+    let html = '';
+
+    sortedTimeline.forEach((item, index) => {
+        const time = item.change_timestamp ? formatDateTime(item.change_timestamp) : "Chưa cập nhật";
+        const statusInfo = getStatusInfo(item.new_status);
+        const noteClass = `note-${statusInfo.type}`;
+
+        // SỬA: dùng item.notes thay vì item.note
+        const noteContent = item.notes || item.note; // Hỗ trợ cả 2 trường
+
+        html += `
+            <div class="timeline-item fade-in" style="animation-delay: ${index * 0.1}s">
+                <div class="timeline-dot ${statusInfo.type}">
+                    <i class="${statusInfo.icon} text-white text-xs"></i>
+                </div>
+                <div class="timeline-content">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="status-badge ${statusInfo.badgeClass}">
+                            <i class="${statusInfo.icon}"></i>
+                            ${statusInfo.text}
+                        </div>
+                        <div class="time-text">
+                            <i class="far fa-clock"></i>
+                            ${time}
+                        </div>
+                    </div>
+                    
+                    ${item.old_status ? `
+                        <div class="flex items-center text-sm text-gray-300 mb-2">
+                            <span class="status-badge ${getStatusInfo(item.old_status).badgeClass}">
+                                ${getStatusInfo(item.old_status).text}
+                            </span>
+                            <i class="fas fa-arrow-right mx-2 text-gray-500 text-xs"></i>
+                            <span class="status-badge ${statusInfo.badgeClass}">
+                                ${statusInfo.text}
+                            </span>
+                        </div>
+                    ` : ''}
+                    
+                    ${noteContent ? `
+                        <div class="${noteClass} note-box">
+                            <div class="flex items-start">
+                                <i class="fas fa-sticky-note mt-0.5 mr-2 ${statusInfo.textColor}"></i>
+                                <div>
+                                    <div class="text-sm text-gray-200 font-medium mb-1">Ghi chú:</div>
+                                    <div class="text-sm text-gray-300 leading-relaxed">${noteContent}</div>
+                                </div>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-600">
+                        <div class="text-xs text-gray-500 flex items-center">
+                            <i class="far fa-user mr-1"></i>
+                            ${item.changed_by || 'Hệ thống'}
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            #${index + 1}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+        // Hàm lấy thông tin status
+        function getStatusInfo(status) {
+            const statusMap = {
+                'Waitlabconfirm': {
+                    type: 'waiting',
+                    text: 'Chờ Xác Nhận',
+                    icon: 'fas fa-clock',
+                    badgeClass: 'badge-waiting',
+                    textColor: 'text-yellow-400'
+                },
+                'PendingEvaluation': {
+                    type: 'processing',
+                    text: 'Đánh Giá KT',
+                    icon: 'fas fa-search',
+                    badgeClass: 'badge-processing',
+                    textColor: 'text-purple-400'
+                },
+                'InternalRepairConfirmed': {
+                    type: 'repair',
+                    text: 'Sửa Nội Bộ',
+                    icon: 'fas fa-tools',
+                    badgeClass: 'badge-repair',
+                    textColor: 'text-blue-400'
+                },
+                'Done': {
+                    type: 'done',
+                    text: 'Hoàn Thành',
+                    icon: 'fas fa-check',
+                    badgeClass: 'badge-done',
+                    textColor: 'text-green-400'
+                },
+                'Cancelled': {
+                    type: 'cancelled',
+                    text: 'Đã Hủy',
+                    icon: 'fas fa-times',
+                    badgeClass: 'badge-cancelled',
+                    textColor: 'text-red-400'
+                }
+            };
+            
+            return statusMap[status] || {
+                type: 'waiting',
+                text: status,
+                icon: 'fas fa-circle',
+                badgeClass: 'badge-waiting',
+                textColor: 'text-gray-400'
+            };
+        }
+
+        // Hàm format datetime
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / (1000 * 60));
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffMins < 1) return 'Vừa xong';
+            if (diffMins < 60) return `${diffMins} phút trước`;
+            if (diffHours < 24) return `${diffHours} giờ trước`;
+            if (diffDays === 1) return 'Hôm qua';
+            if (diffDays < 7) return `${diffDays} ngày trước`;
+
+            return date.toLocaleDateString('vi-VN', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Hàm hiển thị loading
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('timelineContent').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        // Hàm ẩn loading
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('timelineContent').classList.remove('hidden');
+        }
+
+        // Hàm hiển thị lỗi
+        function showError(message) {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('timelineContent').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            
+            const errorState = document.getElementById('errorState');
+            errorState.classList.remove('hidden');
+            errorState.querySelector('p').textContent = message;
+        }
+
+        // Hàm hiển thị empty state
+        function showEmpty() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('timelineContent').classList.add('hidden');
+            document.getElementById('errorState').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+
+        // Auto-refresh mỗi 30 giây
+        function startAutoRefresh() {
+            setInterval(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const requestId = urlParams.get('request_id');
+                if (requestId) {
+                    loadTimeline();
+                }
+            }, 30000);
+        }
+
+        // Khởi chạy khi trang load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTimeline();
+            startAutoRefresh();
+            
+            // Thêm event listener để reload khi iframe được focus
+            window.addEventListener('focus', function() {
+                loadTimeline();
+            });
+        });
+
+        // Hàm để parent page có thể gọi để refresh
+        window.refreshTimeline = function() {
+            loadTimeline();
+        };
+    </script>
+</body>
+</html>

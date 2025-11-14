@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Thư viện xlsx -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  </head>
+  <body class="bg-black text-white p-6">
+    <div id="alertContainer"></div>
+
+    <!-- Header -->
+    <h3
+      class="text-3xl font-bold flex items-center gap-2 border-b-4 border-blue-300 bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent"
+    >
+      <i class="fas fa-file-invoice-dollar text-blue-400 p-3"></i>
+      Equipment Manager - Approve Request
+    </h3>
+
+    <!-- Filter -->
+
+    <details class="bg-gray-800 rounded p-3 my-2">
+      <summary class="cursor-pointer font-semibold text-blue-400">
+        Apply Filter
+      </summary>
+      <div id="Filter">
+        <div class="flex gap-2 justify-between mb-2 relative">
+          <div class="absolute right-0 top-[-1rem] flex gap-1">
+            <button
+              id="applyFilter"
+              class="z-10 cursor-pointer px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 rounded text-sm text-white flex items-center gap-2"
+            >
+              <i class="fas fa-filter text-green-300"></i> Filter
+            </button>
+
+            <button
+              id="clearFilter"
+              class="z-10 cursor-pointer px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 rounded text-sm text-white flex items-center gap-2"
+            >
+              <i class="fa-solid fa-filter-circle-xmark text-red-500"></i>
+              Clear Filter
+            </button>
+          </div>
+          <!-- idReFilter -->
+          <div class="flex-1 w-full">
+            <label for="idReFilter" class="block text-blue-300">ID Req</label>
+            <input
+              type="text"
+              placeholder="ID Req"
+              id="idReFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+            />
+          </div>
+
+          <!-- deviceFilter -->
+          <div class="flex-1">
+            <label for="deviceFilter" class="block text-blue-300"
+              >Device:</label
+            >
+            <input
+              type="text"
+              placeholder="Device"
+              id="deviceFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+            />
+          </div>
+
+          <!-- requestedByFilter -->
+          <div class="flex-1">
+            <label for="requestedByFilter" class="block text-blue-300"
+              >Requested By:</label
+            >
+            <input
+              type="text"
+              placeholder="Requested By"
+              id="requestedByFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+            />
+          </div>
+
+          <!-- Department filter -->
+          <div class="flex-1 relative">
+            <label for="departmentFilter" class="block text-blue-300"
+              >Department:</label
+            >
+            <input
+              onfocus="toggleFilterChecklist('departmentCheckList')"
+              onblur="closeChecklistOnBlur('departmentCheckList')"
+              type="text"
+              readonly
+              placeholder="Department"
+              id="departmentFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+            />
+            <!-- Department Checklist -->
+            <div
+              id="departmentCheckList"
+              tabindex="0"
+              class="hidden mt-2 bg-gray-800 p-3 rounded shadow border border-gray-700 absolute top-[90%] left-0 w-full z-10"
+            >
+              <div
+                class="flex flex-col gap-1"
+                id="departmentChecklistContent"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="my-2 flex gap-2 justify-between">
+          <!-- Team filter -->
+          <div class="flex-1 relative">
+            <label for="teamFilter" class="block text-blue-300">Team</label>
+            <input
+              onfocus="toggleFilterChecklist('teamCheckList')"
+              onblur="closeChecklistOnBlur('teamCheckList')"
+              readonly
+              type="text"
+              placeholder="Team"
+              id="teamFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+            />
+            <!-- Team Checklist -->
+            <div
+              id="teamCheckList"
+              class="mt-2 bg-gray-800 p-3 rounded shadow border border-gray-700 absolute top-[90%] left-0 w-full z-10 hidden"
+            >
+              <div class="flex flex-col gap-1" id="teamChecklistContent"></div>
+            </div>
+          </div>
+
+          <div class="flex-1 relative">
+            <label for="statusFilter" class="block text-blue-300">Status</label>
+            <input
+              onfocus="toggleFilterChecklist('statusCheckList')"
+              onblur="closeChecklistOnBlur('statusCheckList')"
+              readonly
+              type="text"
+              placeholder="Status"
+              id="statusFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white flex-1 w-full"
+            />
+            <!-- Status Checklist -->
+            <div
+              id="statusCheckList"
+              class="mt-2 bg-gray-800 p-3 rounded shadow border border-gray-700 absolute top-[90%] left-0 w-full z-10 hidden"
+            >
+              <div
+                class="flex flex-col gap-1"
+                id="statusChecklistContent"
+              ></div>
+            </div>
+          </div>
+
+          <div class="flex-1">
+            <label class="block text-blue-300" for="fromDateFilter"
+              >From Date:</label
+            >
+            <input
+              type="date"
+              id="fromDateFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white w-full"
+            />
+          </div>
+
+          <div class="flex-1">
+            <label class="block text-blue-300" for="toDateFilter"
+              >To Date:</label
+            >
+            <input
+              type="date"
+              id="toDateFilter"
+              class="px-3 py-2 bg-gray-800 border border-gray-700 rounded text-sm text-white w-full"
+            />
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Tabs -->
+    <div class="border-b border-gray-700 mb-1 flex justify-between">
+      <nav class="flex">
+        <button
+          onclick="loadRequests('action')"
+          data-target="action"
+          data-status=""
+          class="tabBtn text-gray-400 px-4 py-2"
+        >
+          Action
+        </button>
+        <button
+          onclick="loadRequests('all')"
+          data-target="all"
+          data-status=""
+          class="tabBtn text-gray-400 px-3 py-2"
+        >
+          AllList
+        </button>
+      </nav>
+      <div id="pagination" class="flex justify-end items-center">
+        <button class="px-3 py-1 rounded mx-1 bg-blue-600">1</button
+        ><button class="px-3 py-1 rounded mx-1 bg-gray-700 hover:bg-gray-600">
+          2
+        </button>
+      </div>
+    </div>
+
+    <!-- Pending -->
+    <div id="content-pending">
+      <div
+        class="overflow-x-auto rounded border border-gray-800 shadow-lg overflow-y-auto max-h-[65vh]"
+      >
+        <table
+          class="min-w-full text-sm text-gray-300 bg-gray-900 border border-gray-700 border-collapse"
+        >
+          <thead
+            class="bg-gradient-to-r from-blue-500/20 to-purple-600/20 text-slate-200 text-center"
+          >
+            <tr>
+              <th class="px-4 py-1 border border-gray-700">ID Req</th>
+              <th class="px-4 py-1 border border-gray-700">Iden. No.</th>
+              <th class="px-4 py-1 border border-gray-700">Device Name</th>
+              <th class="px-4 py-1 border border-gray-700">Request By</th>
+              <th class="px-4 py-1 border border-gray-700">Department</th>
+              <th class="px-4 py-1 border border-gray-700">Team</th>
+              <th class="px-4 py-1 border border-gray-700">Request Date</th>
+              <th class="px-4 py-1 border border-gray-700">TAT</th>
+              <th class="px-4 py-1 border border-gray-700">Priority</th>
+              <th class="px-4 py-1 border border-gray-700">Status</th>
+              <th class="px-4 py-1 border border-gray-700">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTableBody" class="divide-y divide-gray-800"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- review Quotation modal -->
+    <div id="reviewModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+      <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div
+          class="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          id="reviewModalOverlay"
+        ></div>
+        <div
+          id="reviewModalContent"
+          class="bg-gray-800 rounded shadow-2xl w-full max-w-3xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto relative z-10 border border-gray-700"
+        >
+          <form id="quotationModalForm">
+            <!-- Header -->
+            <div
+              class="flex justify-between items-center border-b border-gray-700 px-4 py-2 top-0 bg-gray-800 z-10 sticky"
+            >
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-500/20 rounded-lg">
+                  <i class="fas fa-user-tie text-blue-400 text-xl"></i>
+                </div>
+                <div>
+                  <h3
+                    class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                  >
+                    EM - Approve Quotation
+                  </h3>
+                  <p class="text-gray-400 text-sm">
+                    Equipment Manager - Approve Step 1
+                  </p>
+                </div>
+              </div>
+              <button
+                onclick="closeReviewModal()"
+                type="button"
+                class="text-gray-200 hover:text-white transition px-2 py-1 bg-red-500"
+              >
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 space-y-2">
+              <!-- Thông tin yêu cầu -->
+              <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-2">
+                <div class="bg-gray-700/50 rounded p-4 border border-gray-600">
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-2 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    <i class="fas fa-info-circle"></i>
+                    Request information
+                  </h4>
+                  <div class="space-y-1">
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Request ID:</span>
+                      <span
+                        id="requestIdReviewModal"
+                        class="ml-1 text-yellow-100"
+                      ></span>
+                    </div>
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Device:</span>
+                      <span
+                        id="requestDeviceReviewModal"
+                        class="ml-1 text-yellow-100"
+                      ></span>
+                    </div>
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Department:</span>
+                      <span
+                        id="requestLabReviewModal"
+                        class="ml-1 text-yellow-100"
+                      ></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-gray-700/50 rounded p-4 border border-gray-600">
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-2 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    <i class="fas fa-cogs"></i>
+                    Detail information
+                  </h4>
+                  <div class="space-y-1">
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium"
+                        >Date Request:</span
+                      >
+                      <span
+                        id="requestDateReviewModal"
+                        class="text-yellow-200 ml-1"
+                      ></span>
+                    </div>
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium"
+                        >Current status:</span
+                      >
+                      <span
+                        id="requestStatusReviewModal"
+                        class="text-yellow-200 ml-1"
+                      ></span>
+                    </div>
+
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Request by:</span>
+                      <span
+                        id="requestRequesterReviewModal"
+                        class="text-yellow-200 ml-1"
+                      ></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mô tả sự cố -->
+              <div
+                class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+              >
+                <h4
+                  class="text-blue-400 font-semibold text-lg mb-4 border-b border-gray-500 flex items-center gap-2"
+                >
+                  <i class="fas fa-file-alt"></i>
+                  Issue Description
+                </h4>
+                <div class="bg-gray-600/50 rounded p-4 min-h-20">
+                  <p
+                    id="requestDescriptionReviewModal"
+                    class="text-gray-300 leading-relaxed"
+                  ></p>
+                </div>
+              </div>
+
+              <div
+                class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+              >
+                <h4
+                  class="text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2 border-b border-gray-500"
+                >
+                  <i class="fas fa-file-alt"></i>EM Evaluation Note
+                </h4>
+                <div class="bg-gray-600/50 rounded p-4 min-h-20">
+                  <p
+                    id="requestNoteReviewModal"
+                    class="text-gray-300 leading-relaxed"
+                  ></p>
+                </div>
+              </div>
+
+              <!-- THÊM PHẦN NÀY SAU EM Evaluation Note -->
+              <div
+                class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+              >
+                <h4
+                  class="text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2 border-b border-gray-500"
+                >
+                  Decision <span class="text-red-500">*</span>
+                </h4>
+                <div class="flex flex-col gap-3">
+                  <label
+                    class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-600 hover:border-green-500 transition cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="quotationAction"
+                      value="approve"
+                      class="text-green-500 focus:ring-green-500"
+                      required
+                    />
+                    <span
+                      class="text-green-400 font-semibold flex items-center gap-2"
+                    >
+                      <i class="fas fa-check-circle"></i> Approve Quotation
+                    </span>
+                  </label>
+                  <label
+                    class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-600 hover:border-red-500 transition cursor-pointer"
+                  >
+                    <input
+                      type="radio"
+                      name="quotationAction"
+                      value="reject"
+                      class="text-red-500 focus:ring-red-500"
+                      required
+                    />
+                    <span
+                      class="text-red-400 font-semibold flex items-center gap-2"
+                    >
+                      <i class="fas fa-times-circle"></i> Reject Quotation
+                    </span>
+                  </label>
+
+                  <!-- THÊM PHẦN NÀY - Conditional fields khi chọn Reject -->
+                  <div
+                    id="rejectOptions"
+                    class="conditional-section bg-gray-800/50 rounded p-3 border border-gray-600 mt-2 hidden"
+                  >
+                    <h5
+                      class="text-blue-300 font-semibold mb-3 flex items-center gap-2"
+                    >
+                      Rejection Options <span class="text-red-500">*</span>
+                    </h5>
+                    <div class="flex flex-col gap-2">
+                      <label
+                        class="flex items-center gap-3 p-2 rounded-lg border border-gray-600 hover:border-blue-500 transition cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="rejectAction"
+                          value="internalrepair"
+                          class="text-blue-500 focus:ring-blue-500"
+                        />
+                        <span
+                          class="text-blue-300 font-medium flex items-center gap-2"
+                        >
+                          <i class="fas fa-tools"></i> Internal Repair
+                        </span>
+                      </label>
+                      <label
+                        class="flex items-center gap-3 p-2 rounded-lg border border-gray-600 hover:border-red-500 transition cursor-pointer"
+                      >
+                        <input
+                          type="radio"
+                          name="rejectAction"
+                          value="disposal"
+                          class="text-red-500 focus:ring-red-500"
+                        />
+                        <span
+                          class="text-red-300 font-medium flex items-center gap-2"
+                        >
+                          <i class="fas fa-trash-alt"></i> Disposal
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- THÊM PHẦN NÀY - File upload khi chọn Disposal -->
+                  <div
+                    id="disposalFileUpload"
+                    class="conditional-section bg-gray-800/50 rounded p-3 border border-gray-600 mt-2 hidden"
+                  >
+                    <h5
+                      class="text-blue-300 font-semibold mb-3 flex items-center gap-2"
+                    >
+                      Disposal Documentation <span class="text-red-500">*</span>
+                    </h5>
+                    <div class="space-y-2">
+                      <p class="text-gray-300 text-sm">
+                        Please attach the disposal documentation file:
+                      </p>
+                      <div class="flex items-center gap-3">
+                        <input
+                          type="file"
+                          id="disposalFile"
+                          class="hidden"
+                          accept=".pdf,.doc,.docx,.jpg,.png"
+                        />
+                        <label
+                          for="disposalFile"
+                          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded cursor-pointer transition flex items-center gap-2 text-sm"
+                        >
+                          <i class="fas fa-paperclip"></i> Choose File
+                        </label>
+                        <span id="fileName" class="text-gray-300 text-sm"
+                          >No file chosen</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form phê duyệt EM -->
+              <div class="space-y-4">
+                <input type="hidden" id="currentRequestIdReviewModal" />
+
+                <div
+                  class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+                >
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    Remark
+                  </h4>
+                  <textarea
+                    id="approvalCommentReviewModal"
+                    rows="4"
+                    class="w-full px-4 py-3 rounded bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                    placeholder="Enter remarks, reasons for approval or rejection..."
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- Thông tin workflow -->
+                <div
+                  class="bg-blue-500/10 border border-blue-500/20 rounded p-4"
+                >
+                  <div class="flex items-center gap-3">
+                    <div>
+                      <h5 class="font-semibold text-blue-400">
+                        <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                        Workflow
+                      </h5>
+                      <p class="text-blue-300 ml-10 text-sm mt-1">
+                        <span class="text-green-500 text-base">Approved: </span>
+                        EM (Apr) → LM → Wait PR
+                      </p>
+
+                      <p class="text-blue-300 ml-10 text-sm mt-1">
+                        <span class="text-red-500 text-base">Rejected: </span>
+                        Re Quotation
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+              class="flex justify-end gap-3 pt-6 border-t border-gray-700 px-8 py-6 sticky bottom-0 bg-gray-800"
+            >
+              <button
+                onclick="closeReviewModal()"
+                type="button"
+                class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white font-medium transition transform hover:scale-105"
+              >
+                Close
+              </button>
+              <button
+                id="submitActionBtn"
+                type="button"
+                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 rounded text-white font-medium transition transform hover:scale-105 flex items-center gap-2"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal duyệt yêu cầu EM -->
+    <div id="approvalModal" class="fixed inset-0 z-50 overflow-y-auto hidden">
+      <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div
+          class="fixed inset-0 bg-black/60 backdrop-blur-sm"
+          id="approvalModalOverlay"
+        ></div>
+        <div
+          id="approvalModalContent"
+          class="bg-gray-800 rounded shadow-2xl w-full max-w-3xl transform transition-all duration-300 max-h-[90vh] overflow-y-auto relative z-10 border border-gray-700"
+        >
+          <form id="approvalForm">
+            <!-- Header -->
+            <div
+              class="flex justify-between items-center border-b border-gray-700 px-4 py-2 top-0 bg-gray-800 z-10 sticky"
+            >
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-500/20 rounded-lg">
+                  <i class="fas fa-user-tie text-blue-400 text-xl"></i>
+                </div>
+                <div>
+                  <h3
+                    class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"
+                  >
+                    EM - Approve Requests
+                  </h3>
+                  <p class="text-gray-400 text-sm">
+                    Equipment Manager - Approve Step 1
+                  </p>
+                </div>
+              </div>
+              <button
+                onclick="closeApprovalModal()"
+                class="text-gray-200 hover:text-white transition px-2 py-1 bg-red-500"
+              >
+                <i class="fas fa-times text-xl"></i>
+              </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 space-y-2">
+              <!-- Thông tin yêu cầu -->
+              <div class="grid grid-cols-1 lg:grid-cols-[2fr_3fr] gap-2">
+                <div class="bg-gray-700/50 rounded p-4 border border-gray-600">
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-2 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    <i class="fas fa-info-circle"></i>
+                    Request information
+                  </h4>
+                  <div class="space-y-1">
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Request ID:</span>
+                      <span id="requestId" class="ml-1 text-yellow-100"></span>
+                    </div>
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Device:</span>
+                      <span
+                        id="requestDevice"
+                        class="ml-1 text-yellow-100"
+                      ></span>
+                    </div>
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Department:</span>
+                      <span id="requestLab" class="ml-1 text-yellow-100"></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-gray-700/50 rounded p-4 border border-gray-600">
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-2 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    <i class="fas fa-cogs"></i>
+                    Detail information
+                  </h4>
+                  <div class="space-y-1">
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium"
+                        >Date Request:</span
+                      >
+                      <span
+                        id="requestDate"
+                        class="text-yellow-200 ml-1"
+                      ></span>
+                    </div>
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium"
+                        >Current status:</span
+                      >
+                      <span
+                        id="requestStatus"
+                        class="text-yellow-200 ml-1"
+                      ></span>
+                    </div>
+
+                    <div
+                      class="flex items-center py-2 border-b border-gray-600"
+                    >
+                      <span class="text-blue-300 font-medium">Request by:</span>
+                      <span
+                        id="requestRequester"
+                        class="text-yellow-200 ml-1"
+                      ></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mô tả sự cố -->
+              <div
+                class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+              >
+                <h4
+                  class="text-blue-400 font-semibold text-lg mb-4 border-b border-gray-500 flex items-center gap-2"
+                >
+                  <i class="fas fa-file-alt"></i>
+                  Issue Description
+                </h4>
+                <div class="bg-gray-600/50 rounded p-4 min-h-20">
+                  <p
+                    id="requestDescription"
+                    class="text-gray-300 leading-relaxed"
+                  ></p>
+                </div>
+              </div>
+
+              <div
+                class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+              >
+                <h4
+                  class="text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2 border-b border-gray-500"
+                >
+                  <i class="fas fa-file-alt"></i>EM Evaluation Note
+                </h4>
+                <div class="bg-gray-600/50 rounded p-4 min-h-20">
+                  <p id="requestNote" class="text-gray-300 leading-relaxed"></p>
+                </div>
+              </div>
+
+              <!-- Form phê duyệt EM -->
+              <div class="space-y-4">
+                <input type="hidden" id="currentRequestId" />
+
+                <div
+                  class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+                >
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    Decision <span class="text-red-500">*</span>
+                  </h4>
+
+                  <div class="flex gap-6">
+                    <label
+                      class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-600 hover:border-green-500 transition cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="action"
+                        value="approve"
+                        class="text-green-500 focus:ring-green-500"
+                        required
+                      />
+                      <span
+                        class="text-green-400 font-semibold flex items-center gap-2"
+                      >
+                        <i class="fas fa-check-circle"></i> Approve -> LM Step
+                      </span>
+                    </label>
+                    <label
+                      class="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-600 hover:border-red-500 transition cursor-pointer"
+                    >
+                      <input
+                        type="radio"
+                        name="action"
+                        value="reject"
+                        class="text-red-500 focus:ring-red-500"
+                        required
+                      />
+                      <span
+                        class="text-red-400 font-semibold flex items-center gap-2"
+                      >
+                        <i class="fas fa-times-circle"></i> Reject
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div
+                  class="bg-gray-700/50 rounded px-4 py-2 border border-gray-600"
+                >
+                  <h4
+                    class="text-blue-400 font-semibold text-lg mb-4 flex items-center gap-2 border-b border-gray-500"
+                  >
+                    Remark
+                    <span
+                      id="approvalCommentRequired"
+                      class="text-red-500"
+                    ></span>
+                  </h4>
+                  <textarea
+                    id="approvalComment"
+                    rows="4"
+                    class="w-full px-4 py-3 rounded bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                    placeholder="Enter remarks, reasons for approval or rejection..."
+                    required
+                  ></textarea>
+                </div>
+
+                <!-- Thông tin workflow -->
+                <div
+                  class="bg-blue-500/10 border border-blue-500/20 rounded p-4"
+                >
+                  <div class="flex items-center gap-3">
+                    <div>
+                      <h5 class="font-semibold text-blue-400">
+                        <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                        Workflow
+                      </h5>
+                      <p class="text-blue-300 ml-10 text-sm mt-1">
+                        <span class="text-green-500 text-base">Approved: </span>
+                        EM (Apr) → LM → Quotation
+                      </p>
+
+                      <p class="text-blue-300 ml-10 text-sm mt-1">
+                        <span class="text-red-500 text-base">Rejected: </span>
+                        EM staff re-evaluation
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div
+              class="flex justify-end gap-3 pt-6 border-t border-gray-700 px-8 py-6 sticky bottom-0 bg-gray-800"
+            >
+              <button
+                onclick="closeApprovalModal()"
+                type="button"
+                class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded text-white font-medium transition transform hover:scale-105"
+              >
+                Close
+              </button>
+              <button
+                id="submitApprovalBtn"
+                type="submit"
+                class="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:opacity-90 rounded text-white font-medium transition transform hover:scale-105 flex items-center gap-2"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <!-- con mắt -->
+    <!-- View modal -->
+    <div
+      id="viewModal"
+      class="fixed inset-0 w-full z-50 overflow-y-auto hidden"
+    >
+      <div class="absolute inset-0 bg-black/75"></div>
+      <div
+        id="viewModalContent"
+        class="relative mx-auto my-2 bg-gray-900 rounded shadow-xl w-[85vw] px-6 py-2 transform transition overflow-y-auto max-h-[90vh]"
+      >
+        <!-- Header -->
+        <div
+          class="flex justify-between items-center border-b border-gray-700 mb-2"
+        >
+          <h3 class="text-xl font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list"></i>
+            View Detail
+          </h3>
+          <button
+            onclick="closeModal()"
+            class="text-gray-400 hover:text-white p-2 px-3 bg-red-500"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+
+        <!-- body -->
+        <div id="viewModalBody">
+          <!-- Detail Requests -->
+          <details
+            open
+            class="bg-gray-800 rounded p-2 shadow border border-gray-700 mb-2"
+          >
+            <summary class="font-semibold text-blue-300 cursor-pointer mb-2">
+              <i class="fas fa-info-circle"></i> Request Info
+            </summary>
+            <div class="grid grid-cols-2 gap-4">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr>
+                    <th
+                      colspan="2"
+                      class="text-center text-lg font-bold text-white border border-gray-700 pb-1 bg-blue-950"
+                    >
+                      Request Details
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      ID Req
+                    </td>
+                    <td id="ViewModalIdReq" class="px-2"></td>
+                  </tr>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      Device
+                    </td>
+
+                    <td id="viewModalDeviceReq" class="px-2"></td>
+                  </tr>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      Requested By
+                    </td>
+                    <td id="viewModalRequestedByReq" class="px-2"></td>
+                  </tr>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      Department
+                    </td>
+                    <td id="viewModalDepartmentReq" class="px-2"></td>
+                  </tr>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      Team
+                    </td>
+                    <td id="viewModalTeamReq" class="px-2"></td>
+                  </tr>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      Requests Date
+                    </td>
+                    <td id="viewModalRequestDateReq" class="px-2"></td>
+                  </tr>
+                  <tr class="hover:bg-gray-500 border border-gray-700">
+                    <td
+                      class="px-2 py-1 font-semibold border border-gray-700 text-blue-300"
+                    >
+                      Status
+                    </td>
+                    <td id="viewModalStatusReq" class="font-bold px-2"></td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th
+                      colspan="2"
+                      class="border border-gray-700 text-white font-bold text-lg text-center bg-blue-950"
+                    >
+                      Device Error Detail
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td class="text-blue-300 px-2">Lab Comment</td>
+                    <td
+                      id="viewModalLabCommentReq"
+                      class="border border-gray-700 px-2"
+                    ></td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td class="text-blue-300 px-2">EM Comment</td>
+                    <td
+                      id="viewModalEMCommentReq"
+                      class="border border-gray-700 px-2"
+                    ></td>
+                  </tr>
+                  <tr class="border border-gray-700 hover:bg-gray-500">
+                    <td class="text-blue-300 px-2">EM Name</td>
+                    <td
+                      id="viewModalEMNameReq"
+                      class="border border-gray-700 px-2"
+                    ></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </details>
+
+          <!-- TIMELINE SECTION - THÊM VÀO ĐÂY -->
+          <details
+            open
+            class="bg-gray-800 rounded-lg p-4 border border-gray-700 mb-2"
+          >
+            <summary
+              class="font-semibold text-purple-300 cursor-pointer text-lg flex items-center gap-2"
+            >
+              <i class="fas fa-history"></i>
+              Timeline History
+            </summary>
+            <div
+              style="
+                width: 100%;
+                height: 600px;
+                border: 1px solid #374151;
+                border-radius: 8px;
+                overflow: hidden;
+              "
+            >
+              <iframe
+                id="timelineIframe"
+                src=""
+                style="width: 100%; height: 100%; border: none"
+                onload="resizeTimelineIframe()"
+              ></iframe>
+            </div>
+          </details>
+
+          <!-- Wait Approve -->
+          <details
+            open
+            id="viewModalWaitApr"
+            class="bg-gray-800 rounded p-2 shadow border border-gray-700 mb-2"
+          >
+            <summary class="font-semibold text-yellow-300 cursor-pointer mb-2">
+              <i class="fa-solid fa-hourglass-start"></i> Wait Approve Info
+            </summary>
+            <div
+              id="viewModalWaitAprContent"
+              class="w-full grid grid-cols-2 gap-2"
+            ></div>
+          </details>
+
+          <!-- Detail Approve -->
+          <details
+            id="viewModalApr"
+            open
+            class="bg-gray-800 rounded p-2 shadow border border-gray-700 mb-2"
+          >
+            <summary class="font-semibold text-green-400 cursor-pointer mb-2">
+              <i class="fa-solid fa-hourglass-start"></i> Approve Info
+            </summary>
+            <table class="w-full text-sm">
+              <thead>
+                <tr>
+                  <th
+                    colspan="2"
+                    class="text-center text-lg font-bold text-white border border-gray-700 pb-1 bg-green-900"
+                  >
+                    Approve Details
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="hover:bg-gray-500 border border-gray-700">
+                  <td
+                    class="px-2 py-1 font-semibold border border-gray-700 text-green-300"
+                  >
+                    🏢 Supplier
+                  </td>
+                  <td id="ViewModalSupplierApr" class="px-2"></td>
+                </tr>
+                <tr class="hover:bg-gray-500 border border-gray-700">
+                  <td
+                    class="px-2 py-1 font-semibold border border-gray-700 text-green-300"
+                  >
+                    🏷️ Price (VND)
+                  </td>
+
+                  <td id="viewModalPriceApr" class="px-2"></td>
+                </tr>
+                <tr class="hover:bg-gray-500 border border-gray-700">
+                  <td
+                    class="px-2 py-1 font-semibold border border-gray-700 text-green-300"
+                  >
+                    💬 Quotation Remark
+                  </td>
+                  <td id="viewModalQuotationRemarkApr" class="px-2"></td>
+                </tr>
+                <tr class="hover:bg-gray-500 border border-gray-700">
+                  <td
+                    class="px-2 py-1 font-semibold border border-gray-700 text-green-300"
+                  >
+                    💬 EM Manager Remark
+                  </td>
+                  <td id="viewModalEMManagerRemarkApr" class="px-2"></td>
+                </tr>
+                <tr class="hover:bg-gray-500 border border-gray-700">
+                  <td
+                    class="px-2 py-1 font-semibold border border-gray-700 text-green-300"
+                  >
+                    💬 Lab Manager Remark
+                  </td>
+                  <td id="viewModalLabManagerRemarkApr" class="px-2"></td>
+                </tr>
+                <tr class="hover:bg-gray-500 border border-gray-700">
+                  <td
+                    class="px-2 py-1 font-semibold border border-gray-700 text-green-300"
+                  >
+                    📄 File Attached
+                  </td>
+                  <td id="viewModalFileAttachApr" class="px-2"></td>
+                </tr>
+              </tbody>
+            </table>
+          </details>
+
+          <!-- Detail Cancel -->
+          <details
+            open
+            id="viewModalCancel"
+            class="bg-gray-800 rounded p-2 shadow border border-gray-700 mb-2"
+          >
+            <summary class="font-semibold text-gray-500 cursor-pointer mb-2">
+              <i class="fa-solid fa-ban"></i> Cancel Info
+            </summary>
+            <div
+              id="viewModalCancelContent"
+              class="grid grid-cols-2 gap-2"
+            ></div>
+          </details>
+        </div>
+
+        <!-- Footer -->
+        <div
+          class="flex justify-end items-center border-t border-gray-700 pt-3"
+        >
+          <div class="flex gap-2">
+            <button
+              onclick="closeModal()"
+              class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      const userLabId = "{{ current_user.idlab }}";
+      const userTeamId = "{{ current_user.idteam }}";
+      const username = "{{ current_user.username}}";
+    </script>
+    <script>
+  // Xử lý conditional fields cho quotation modal
+  document.addEventListener('DOMContentLoaded', function() {
+    const quotationActionRadios = document.querySelectorAll('input[name="quotationAction"]');
+    const rejectOptionsSection = document.getElementById('rejectOptions');
+    const disposalFileUploadSection = document.getElementById('disposalFileUpload');
+    const disposalFileInput = document.getElementById('disposalFile');
+    const fileNameSpan = document.getElementById('fileName');
+    
+    // Xử lý khi chọn quotation action
+    quotationActionRadios.forEach(radio => {
+      radio.addEventListener('change', function() {
+        // Ẩn tất cả conditional sections
+        rejectOptionsSection.classList.add('hidden');
+        disposalFileUploadSection.classList.add('hidden');
+        
+        // Hiển thị relevant sections
+        if (this.value === 'reject') {
+          rejectOptionsSection.classList.remove('hidden');
+        }
+      });
+    });
+    
+    // Xử lý khi chọn reject action
+    document.querySelectorAll('input[name="rejectAction"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        if (this.value === 'disposal') {
+          disposalFileUploadSection.classList.remove('hidden');
+        } else {
+          disposalFileUploadSection.classList.add('hidden');
+        }
+      });
+    });
+    
+    // Hiển thị tên file khi chọn file
+    if (disposalFileInput) {
+      disposalFileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+          fileNameSpan.textContent = this.files[0].name;
+        } else {
+          fileNameSpan.textContent = 'No file chosen';
+        }
+      });
+    }
+  });
+</script>
+
+    <!-- Approve JS -->
+    <script src="{{ url_for('static', filename='js/EM_MN_apr.js') }}"></script>
+  </body>
+</html>
