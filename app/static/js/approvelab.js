@@ -1050,7 +1050,7 @@ document.querySelectorAll('input[name="action"]').forEach((radio) => {
       document.getElementById("approvalComment").required = true;
     } else {
       document.getElementById("approvalCommentRequired").textContent = "";
-      document.getElementById("approvalComment").required = true;
+      document.getElementById("approvalComment").required = false;
     }
   });
 });

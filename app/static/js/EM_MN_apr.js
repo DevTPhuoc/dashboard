@@ -213,12 +213,7 @@ document.getElementById("submitActionBtn").onclick = async function () {
     }
 
     // Validation cho approve action
-    if (selected.value === "approve" && !remark.trim()) {
-        showAlert("Vui lòng nhập remark khi approve!", "warning");
-        document.getElementById("approvalCommentReviewModal").focus();
-        return;
-    }
-
+   
     // Mapping Status theo lựa chọn radio
     let statusValue;
     let confirmMsg = "";
@@ -861,7 +856,7 @@ document.querySelectorAll('input[name="action"]').forEach((radio) => {
       document.getElementById("approvalComment").required = true;
     } else {
       document.getElementById("approvalCommentRequired").textContent = "";
-      document.getElementById("approvalComment").required = true;
+      document.getElementById("approvalComment").required = false;
     }
   });
 });
