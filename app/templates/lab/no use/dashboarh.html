@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - CMMS System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .card-hover:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-white p-4 md:p-6">
+    <div class="text-gray-200 w-full mx-auto">
+        <!-- Alert Container -->
+        <div id="alertContainer" class="fixed top-4 right-4 z-50 max-w-md w-full"></div>
+
+        <!-- Header -->
+        <div class="pb-2">
+            <h3 class="text-3xl font-bold flex items-center gap-2 border-b-4 border-blue-300 text-white">
+                <i class="fas fa-tachometer-alt text-blue-400 p-3"></i>
+                Dashboard Overview
+                <div class="flex items-center gap-2 ml-auto">
+                    <button onclick="testConnection()"
+                        class="px-4 py-2 rounded bg-green-600 hover:bg-green-500 text-white transition text-sm">
+                        <i class="fas fa-plug"></i> Test Connection
+                    </button>
+                    <button onclick="loadDashboardData()"
+                        class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-500 text-white transition text-sm">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </h3>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-gray-800 border border-gray-700 p-4 shadow-lg rounded-lg mb-6">
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex-1 min-w-[200px]">
+                    <label for="labFilter" class="block text-sm text-gray-300 mb-2">Department</label>
+                    <select id="labFilter"
+                        class="w-full p-2 text-sm rounded bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">All Departments</option>
+                    </select>
+                </div>
+
+                <div class="flex-1 min-w-[200px]">
+                    <label for="teamFilter" class="block text-sm text-gray-300 mb-2">Lab</label>
+                    <select id="teamFilter"
+                        class="w-full p-2 text-sm rounded bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="all">All Labs</option>
+                    </select>
+                </div>
+
+                <div class="flex-1 min-w-[200px]">
+                    <label for="fromDate" class="block text-sm text-gray-300 mb-2">From Date</label>
+                    <input id="fromDate" type="date"
+                        class="w-full p-2 text-sm rounded bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+                </div>
+
+                <div class="flex-1 min-w-[200px]">
+                    <label for="toDate" class="block text-sm text-gray-300 mb-2">To Date</label>
+                    <input id="toDate" type="date"
+                        class="w-full p-2 text-sm rounded bg-gray-700 border border-gray-600 text-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" />
+                </div>
+
+                <div class="flex items-end">
+                    <button onclick="applyFilters()"
+                        class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded text-white transition transform hover:scale-105">
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6" id="summaryCards">
+            <!-- Cards will be populated by JavaScript -->
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i
+                        class="fas fa-chart-pie text-blue-400"></i>Device Status Distribution</h3>
+                <div class="chart-container"><canvas id="deviceStatusChart"></canvas></div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i
+                        class="fas fa-chart-bar text-green-400"></i>Repair Request Status</h3>
+                <div class="chart-container"><canvas id="repairStatusChart"></canvas></div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i
+                        class="fas fa-money-bill-wave text-yellow-400"></i>Repair Cost by Department</h3>
+                <div class="chart-container"><canvas id="costByLabChart"></canvas></div>
+            </div>
+            <div class="bg-gray-800 rounded-lg p-6 shadow-lg">
+                <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i
+                        class="fas fa-user-cog text-purple-400"></i>Technician Performance</h3>
+                <div class="chart-container"><canvas id="techPerformanceChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Status Timing Analysis -->
+        <div class="bg-gray-800 rounded-lg p-6 shadow-lg mb-6" id="statusAnalysisSection">
+            <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-clock text-red-400"></i>Status
+                Timing Analysis</h3>
+            <div id="statusAnalysisContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- Data Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-gray-800 rounded-lg shadow-lg">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="text-lg font-bold flex items-center gap-2"><i
+                            class="fas fa-list-ol text-blue-400"></i>Top Repair Devices</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-gray-300">Device Name</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Repair Count</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Total Cost</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Lab</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topDevicesTableBody" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-lg shadow-lg">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="text-lg font-bold flex items-center gap-2"><i
+                            class="fas fa-exclamation-triangle text-red-400"></i>Recent High Priority Requests</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-gray-300">Request ID</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Device</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Status</th>
+                                <th class="px-4 py-3 text-left text-gray-300">TAT (Days)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priorityRequestsTableBody" class="divide-y divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState"
+            class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-gray-800 rounded-lg p-8 text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500">
+                </div>
+                <p class="mt-4 text-gray-300">Loading dashboard data...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Biến toàn cục
+        let charts = {};
+        let currentData = null;
+        const API_BASE = '/repair_requests/dashboard'; // Sửa thành /dashboard
+
+        // Khởi tạo dashboard
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🚀 Initializing Dashboard...');
+            initializeDates();
+            loadFilterOptions();
+            initializeDashboard();
+        });
+
+        function initializeDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            document.getElementById('fromDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        }
+
+        async function loadFilterOptions() {
+            try {
+                const [labsResponse, teamsResponse] = await Promise.all([
+                    fetch('/labs/'),
+                    fetch('/teams/')
+                ]);
+
+                const labs = await labsResponse.json();
+                const teams = await teamsResponse.json();
+
+                const labSelect = document.getElementById('labFilter');
+                const teamSelect = document.getElementById('teamFilter');
+
+                labs.forEach(lab => {
+                    const option = document.createElement('option');
+                    option.value = lab.id;
+                    option.textContent = lab.LabName;
+                    labSelect.appendChild(option);
+                });
+
+                teams.forEach(team => {
+                    const option = document.createElement('option');
+                    option.value = team.id;
+                    option.textContent = team.TeamName;
+                    teamSelect.appendChild(option);
+                });
+
+                console.log('✅ Filter options loaded');
+            } catch (error) {
+                console.error('Error loading filter options:', error);
+            }
+        }
+
+        async function initializeDashboard() {
+            console.log('🔍 Testing dashboard endpoints...');
+            const working = await testConnection();
+
+            if (working) {
+                console.log('✅ Dashboard endpoint is working, loading data...');
+                loadDashboardData();
+            } else {
+                console.log('❌ Using fallback data');
+
+                const fallbackData = getFallbackData();
+                updateDashboard(fallbackData);
+            }
+        }
+
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/test`);
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Connection test successful:', data);
+                    return true;
+                }
+            } catch (error) {
+                console.log('❌ Connection test failed:', error.message);
+            }
+            return false;
+        }
+
+        async function loadDashboardData() {
+            showLoading(true);
+            const filters = getFilters();
+
+            try {
+                console.log('📊 Loading dashboard data with filters:', filters);
+                const response = await fetch(`${API_BASE}/overview`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(filters)
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('✅ Dashboard data received:', data);
+
+                currentData = data;
+                updateDashboard(data);
+                showLoading(false);
+
+            } catch (error) {
+                console.error('❌ Error loading dashboard data:', error);
+                showAlert('Error loading dashboard data. Using demo data.', 'error');
+                const fallbackData = getFallbackData();
+                updateDashboard(fallbackData);
+                showLoading(false);
+            }
+        }
+
+        function getFilters() {
+            const labFilter = document.getElementById('labFilter');
+            const teamFilter = document.getElementById('teamFilter');
+
+            return {
+                LabId: labFilter.value !== 'all' ? [parseInt(labFilter.value)] : [],
+                TeamId: teamFilter.value !== 'all' ? [parseInt(teamFilter.value)] : [],
+                FromDate: document.getElementById('fromDate').value,
+                ToDate: document.getElementById('toDate').value,
+                status: [],
+                Priority: null
+            };
+        }
+
+        function applyFilters() {
+            console.log('🔧 Applying filters...');
+            loadDashboardData();
+        }
+
+        function updateDashboard(data) {
+            console.log('🔄 Updating dashboard with new data...');
+            updateSummaryCards(data.summary);
+            updateCharts(data);
+            updateStatusAnalysis(data.status_timing_analysis);
+            updateTopDevicesTable(data.top_repair_devices);
+            updatePriorityRequestsTable(data.repair_details);
+            console.log('✅ Dashboard updated successfully');
+        }
+
+        function updateSummaryCards(summary) {
+            const cardsContainer = document.getElementById('summaryCards');
+            const cards = [
+                { icon: 'fa-flask', color: 'text-blue-400', label: 'Total Labs', value: summary.total_labs },
+                { icon: 'fa-users', color: 'text-green-400', label: 'Total Teams', value: summary.total_teams },
+                { icon: 'fa-desktop', color: 'text-purple-400', label: 'Total Devices', value: summary.total_devices },
+                { icon: 'fa-wrench', color: 'text-yellow-400', label: 'Repair Requests', value: summary.total_repair_requests },
+                { icon: 'fa-dollar-sign', color: 'text-green-400', label: 'Total Repair Cost', value: `$${(summary.total_repair_cost || 0).toLocaleString()}` },
+                { icon: 'fa-exclamation-triangle', color: 'text-red-400', label: 'High Priority', value: summary.high_priority_requests },
+                { icon: 'fa-chart-line', color: 'text-indigo-400', label: 'Recent Requests (7d)', value: summary.recent_requests_7_days },
+                { icon: 'fa-tools', color: 'text-orange-400', label: 'Total Repairs', value: summary.total_repair_count }
+            ];
+
+            cardsContainer.innerHTML = cards.map(card => `
+                <div class="bg-gray-800 rounded-lg p-6 shadow-lg card-hover">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0"><i class="fas ${card.icon} text-3xl ${card.color}"></i></div>
+                        <div class="ml-4"><h3 class="text-sm font-medium text-gray-300">${card.label}</h3><p class="text-2xl font-bold text-white mt-1">${card.value}</p></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateCharts(data) {
+            updatePieChart('deviceStatusChart', data.device_status, 'Device Status Distribution');
+            updatePieChart('repairStatusChart', data.repair_status, 'Repair Request Status');
+            updateBarChart('costByLabChart', data.lab_statistics, 'lab_name', 'total_cost', 'Total Repair Cost by Department');
+            updateTechPerformanceChart('techPerformanceChart', data.technician_performance);
+        }
+
+        function updatePieChart(canvasId, data, title) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (charts[canvasId]) charts[canvasId].destroy();
+
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+
+            charts[canvasId] = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        data: Object.values(data),
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#1f2937'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#d1d5db', font: { size: 11 } } } }
+                }
+            });
+        }
+
+        function updateBarChart(canvasId, data, labelKey, valueKey, title) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (charts[canvasId]) charts[canvasId].destroy();
+
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => item[labelKey]),
+                    datasets: [{
+                        label: title,
+                        data: data.map(item => item[valueKey]),
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#1d4ed8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { color: '#d1d5db' }, grid: { color: '#374151' } },
+                        x: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
+                    }
+                }
+            });
+        }
+
+        function updateTechPerformanceChart(canvasId, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            if (charts[canvasId]) charts[canvasId].destroy();
+
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(tech => tech.tech_name),
+                    datasets: [{
+                        label: 'Completion Rate (%)',
+                        data: data.map(tech => tech.completion_rate),
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { color: '#d1d5db' }, grid: { color: '#374151' } },
+                        x: { ticks: { color: '#d1d5db' }, grid: { color: '#374151' } }
+                    }
+                }
+            });
+        }
+
+        function updateStatusAnalysis(analysis) {
+            const container = document.getElementById('statusAnalysisContent');
+
+            if (!analysis.status_durations || Object.keys(analysis.status_durations).length === 0) {
+                container.innerHTML = '<p class="text-gray-400 col-span-4 text-center">No data available for status timing analysis</p>';
+                return;
+            }
+
+            let html = '';
+            Object.entries(analysis.status_durations).forEach(([status, data]) => {
+                html += `
+                    <div class="bg-gray-700 rounded-lg p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-400 mb-2">${data.average_days}d</div>
+                        <div class="text-sm text-gray-300">${status}</div>
+                        <div class="text-xs text-gray-400 mt-1">${data.request_count} requests</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+
+            // Hiển thị status tốn nhiều thời gian nhất
+            if (analysis.longest_pending_status) {
+                const header = document.querySelector('#statusAnalysisSection h3');
+                header.innerHTML = `<i class="fas fa-clock text-red-400"></i>Status Timing Analysis <span class="text-sm text-red-400">(Longest: ${analysis.longest_pending_status.status} - ${analysis.longest_pending_status.average_days}d)</span>`;
+            }
+        }
+
+        function updateTopDevicesTable(devices) {
+            const tbody = document.getElementById('topDevicesTableBody');
+
+            if (!devices || devices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">No data available</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = devices.map(device => `
+                <tr class="hover:bg-gray-700 transition">
+                    <td class="px-4 py-3">${device.device_name}</td>
+                    <td class="px-4 py-3">${device.repair_count}</td>
+                    <td class="px-4 py-3">$${(device.total_cost || 0).toLocaleString()}</td>
+                    <td class="px-4 py-3">${device.lab_name}</td>
+                </tr>
+            `).join('');
+        }
+
+        function updatePriorityRequestsTable(requests) {
+            const tbody = document.getElementById('priorityRequestsTableBody');
+
+            if (!requests || requests.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">No high priority requests</td></tr>';
+                return;
+            }
+
+            const highPriority = requests.filter(req => req.priority === 'High').slice(0, 5);
+
+            if (highPriority.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-center text-gray-400">No high priority requests</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = highPriority.map(req => `
+                <tr class="hover:bg-gray-700 transition">
+                    <td class="px-4 py-3">#${req.id}</td>
+                    <td class="px-4 py-3">${req.device_name || 'N/A'}</td>
+                    <td class="px-4 py-3">${req.status}</td>
+                    <td class="px-4 py-3">${req.tat_days || 'N/A'} days</td>
+                </tr>
+            `).join('');
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingState').classList.toggle('hidden', !show);
+        }
+
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertClass = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            }[type];
+
+            const alertHtml = `
+                <div class="p-4 rounded-lg shadow-lg ${alertClass} text-white animate-fade-in">
+                    <div class="flex items-center justify-between">
+                        <span>${message}</span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+            `;
+
+            alertContainer.innerHTML = alertHtml;
+
+            setTimeout(() => {
+                if (alertContainer.firstChild) alertContainer.firstChild.remove();
+            }, 5000);
+        }
+
+        function getFallbackData() {
+            return {
+                summary: {
+                    total_labs: 5,
+                    total_teams: 15,
+                    total_devices: 120,
+                    total_repair_requests: 45,
+                    recent_requests_7_days: 8,
+                    total_repair_cost: 12500.50,
+                    average_repair_cost: 277.78,
+                    total_repair_count: 67,
+                    high_priority_requests: 12
+                },
+                device_status: { 'available': 85, 'in_use': 25, 'maintenance': 8, 'broken': 2 },
+                repair_status: { 'Pending': 15, 'InProgress': 8, 'Completed': 20, 'Cancelled': 2 },
+                lab_statistics: [
+                    { lab_name: 'Lab 1', device_count: 25, repair_count: 12, total_cost: 4500 },
+                    { lab_name: 'Lab 2', device_count: 30, repair_count: 18, total_cost: 6200 },
+                    { lab_name: 'Lab 3', device_count: 22, repair_count: 8, total_cost: 1800 }
+                ],
+                top_repair_devices: [
+                    { device_name: 'Microscope A1', repair_count: 5, total_cost: 2500, team_name: 'Biology Team', lab_name: 'Lab 1' },
+                    { device_name: 'Centrifuge B2', repair_count: 4, total_cost: 1800, team_name: 'Chemistry Team', lab_name: 'Lab 2' },
+                    { device_name: 'Spectrometer C3', repair_count: 3, total_cost: 3200, team_name: 'Physics Team', lab_name: 'Lab 3' }
+                ],
+                status_timing_analysis: {
+                    status_durations: {
+                        'Pending': { average_days: 2.5, request_count: 8, max_days: 5, min_days: 1, total_days: 20 },
+                        'InProgress': { average_days: 3.2, request_count: 12, max_days: 7, min_days: 1, total_days: 38.4 },
+                        'Completed': { average_days: 1.8, request_count: 15, max_days: 4, min_days: 1, total_days: 27 }
+                    },
+                    longest_pending_status: { status: 'InProgress', average_days: 3.2 }
+                },
+                technician_performance: [
+                    { tech_name: 'Tech 1', completion_rate: 85, total_requests: 20 },
+                    { tech_name: 'Tech 2', completion_rate: 72, total_requests: 15 },
+                    { tech_name: 'Tech 3', completion_rate: 90, total_requests: 25 }
+                ],
+                repair_details: [
+                    { id: 1, device_name: 'Device A', status: 'Pending', priority: 'High', tat_days: 2 },
+                    { id: 2, device_name: 'Device B', status: 'InProgress', priority: 'High', tat_days: 1 },
+                    { id: 3, device_name: 'Device C', status: 'Completed', priority: 'Normal', tat_days: 5 }
+                ],
+                tat_analysis: { average_tat: 2.5, max_tat: 10, min_tat: 1, total_analyzed: 20 }
+            };
+        }
+
+        // Auto-refresh mỗi 5 phút
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadDashboardData();
+            }
+        }, 300000);
+    </script>
+</body>
+
+</html>

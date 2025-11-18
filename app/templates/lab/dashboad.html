@@ -167,268 +167,267 @@
 <div class="grid grid-cols-1 gap-[2px] h-full w-full p-2 box-border">
     <!-- Main content với 3 cột -->
     <div class="main-content">
-        <!-- Left section -->
-        <div class="h-full w-full overflow-hidden flex flex-col">
-            <div class="glass-card rounded-2xl p-4 h-full">
-                <div class="h-full overflow-y-auto">
-                    <h3 class="text-white text-lg font-bold flex items-center">
-                        <i class="fas fa-chart-pie mr-2 text-blue-400 text-lg"></i>
-                        Overview Statistics
-                    </h3>
-
-                    <!-- <hr class="border-t border-gray-700" /> -->
-
-                    <!-- Login Metric -->
-                    <div class="border border-solid rounded-xl p-3 border-l-4 border-cyan-400">
-                        <div class="flex items-center justify-between mb-1">
-                            <div>
-                                <div id="totalLogin" class="text-xl font-bold text-cyan-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Logins Today</div>
-                            </div>
-                            <i class="fas fa-sign-in-alt text-cyan-400 text-lg"></i>
-                        </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2 mb-2">
-                            <div class="progress-bar-login rounded-full h-2 bg-gradient-to-r from-cyan-400 via-purple-300 to-cyan-300"
-                                style="background-size: 200% 100%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs">
-                            <span class="text-gray-500">Target: <span id="totalLoginGoal">0</span></span>
-                            <span class="text-cyan-400 font-bold"><span id="totalLoginCompleteRate">0</span>%
-                                achieved</span>
-                        </div>
+        <!-- Card Group  -->
+        <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 py-2 " >
+            <div
+                class="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] transition duration-300 glass-card  ">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-flask text-3xl text-cyan-400"></i>
                     </div>
-
-                    <div class="flex flex-col mt-2">
-                        <!-- TA Completion Liquid Chart to day -->
-                        <div class="rounded-xl p-3 border border-solid border-l-4 border-purple-400 h-full">
-                            <h4 class="text-white text-base font-bold flex items-center">
-                                <i class="fas fa-tint mr-1 text-purple-400"></i>
-                                TA Rate - Today
-                            </h4>
-                            <div class="flex flex-col items-center justify-center gap-2 overflow-hidden">
-                                <div class="relative w-full h-1/3 flex justify-center items-center overflow-hidden">
-                                    <div id="ta-liquid-chart"
-                                        class="absolute top-1/2 left-1/2 w-full min-w-[125%] aspect-square -translate-x-1/2 -translate-y-1/2">
-                                    </div>
-                                    <div class="min-h-48"></div>
-                                    <!-- label phần trăm sẽ nằm phía dưới biểu đồ -->
-                                </div>
-                                <div class="w-full flex flex-col gap-1 px-2">
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-blue-400">Total TA Complete:</span>
-                                        <span id="totalTaComplete" class="text-blue-400 font-bold">0</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-green-400">Complete-Login Today:</span>
-                                        <span id="totalTaDone" class="text-green-400 font-bold">0</span>
-                                    </div>
-                                    <div class="flex justify-between text-xs">
-                                        <span class="text-yellow-400">Pending-Login Today:</span>
-                                        <span id="totalTaProcessing" class="text-yellow-400 font-bold">0</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TA Completion Progress Chart 7 day previous -->
-                        <div
-                            class="rounded-xl p-4 border border-solid border-l-4 border-teal-400 max-h-full mt-2 flex flex-col flex-1">
-                            <h4 class="text-white text-base font-bold flex items-center">
-                                <i class="fas fa-calendar-week mr-2 text-teal-400"></i>
-                                TA Rate - Previous 7 Days
-                            </h4>
-
-                            <!-- Semicircle Gauge theo mẫu -->
-                            <div class="flex-1 flex flex-col">
-                                <div class="flex justify-center">
-                                    <div id="gauge-chart" class="h-44 w-44 overflow-hidden"></div>
-                                </div>
-
-                                <!-- Mini Horizontal Bar Chart  -->
-                                <div class="flex-1">
-                                    <div class="bg-gray-800 bg-opacity-30 rounded-lg">
-                                        <div id="ta-week-mini-chart"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-cyan-200">Total Cost</h3>
+                        <p class="text-2xl font-bold text-white mt-1">5</p>
                     </div>
-
-                    <!-- Real-time Alerts -->
-                    <!-- <div
-                class="border border-solid rounded-xl p-3 border-l-4 border-red-400"
-              >
-                <h4 class="text-white text-sm font-bold mb-2 flex items-center">
-                  <i class="fas fa-exclamation-triangle mr-1 text-red-400"></i>
-                  Cảnh báo trực tiếp
-                </h4>
-                <div class="space-y-2">
-                  <div
-                    class="flex items-center text-xs bg-red-900 bg-opacity-30 p-2 rounded-lg"
-                  >
-                    <div class="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
-                    <span class="text-gray-300"
-                      >Lab D: Trễ tiến độ nghiêm trọng</span
-                    >
-                  </div>
-                  <div
-                    class="flex items-center text-xs bg-yellow-900 bg-opacity-30 p-2 rounded-lg"
-                  >
-                    <div class="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
-                    <span class="text-gray-300"
-                      >Lab B: Khối lượng công việc cao</span
-                    >
-                  </div>
-                  <div
-                    class="flex items-center text-xs bg-green-900 bg-opacity-30 p-2 rounded-lg"
-                  >
-                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
-                    <span class="text-gray-300"
-                      >Sao lưu hệ thống: Bình thường</span
-                    >
-                  </div>
                 </div>
-              </div> -->
+            </div>
+        
+            <!-- Total Teams -->
+            <div
+                class="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] transition duration-300 glass-card  ">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-3xl text-green-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-green-300">TET</h3>
+                        <p class="text-2xl font-bold text-white mt-1">15</p>
+                    </div>
+                </div>
+            </div>
+        
+            <!-- Total Devices -->
+            <div
+                class="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(128,90,213,0.2)] hover:shadow-[0_0_30px_rgba(128,90,213,0.4)] transition duration-300 glass-card   ">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-desktop text-3xl text-purple-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-purple-300">Total Pending</h3>
+                        <p class="text-2xl font-bold text-white mt-1">120</p>
+                    </div>
+                </div>
+            </div>
+        
+            
+            <!-- HINHA -->
+            <div
+                class="bg-gradient-to-br from-[#2a0f0f] via-[#3b1e1e] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition duration-300 glass-card  ">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-wrench text-3xl text-red-400"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-red-300">Repair Requests</h3>
+                        <p class="text-2xl font-bold text-white mt-1">45</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Middle section với 2 biểu đồ -->
-        <div class="h-full w-full overflow-hidden grid grid-rows-[1fr_1fr] gap-2">
-            <!-- Biểu đồ In/Out theo giờ -->
-            <div class="h-full w-full overflow-hidden relative">
-                <div class="glass-card rounded-xl p-2 h-full">
-                    <div class="flex items-center justify-between">
+        <!-- TABLE -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-4 py-2 w-full -mt-1	">
+            <div class=" rounded border border-gray-800 shadow-lg  max-h-[65vh]">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-list-ol text-blue-400"></i>TOP 5 MOST EXPENSIVE REPAIR EQUIPMENT
+</h3>
+                </div>
+                <div >
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 p-4 rounded-xl shadow-lg">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-gray-300 ">Device Name</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Repair Count</th>
+                                <th class="px-4 py-3 text-left text-gray-300 ">Total Cost</th>
+                                <th class="px-4 py-3 text-left text-gray-300 ">Lab</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topDevicesTableBody" class="divide-y divide-gray-700">
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Microscope A1</td>
+                                <td class="px-4 py-3">5</td>
+                                <td class="px-4 py-3">$2,500</td>
+                                <td class="px-4 py-3">Lab 1</td>
+                            </tr>
+        
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Centrifuge B2</td>
+                                <td class="px-4 py-3">4</td>
+                                <td class="px-4 py-3">$1,800</td>
+                                <td class="px-4 py-3">Lab 2</td>
+                            </tr>
+        
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Spectrometer C3</td>
+                                <td class="px-4 py-3">3</td>
+                                <td class="px-4 py-3">$3,200</td>
+                                <td class="px-4 py-3">Lab 3</td>
+                            </tr>
+                              <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Spectrometer C3</td>
+                                <td class="px-4 py-3">3</td>
+                                <td class="px-4 py-3">$3,200</td>
+                                <td class="px-4 py-3">Lab 3</td>
+                            </tr>
+                              <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Spectrometer C3</td>
+                                <td class="px-4 py-3">3</td>
+                                <td class="px-4 py-3">$3,200</td>
+                                <td class="px-4 py-3">Lab 3</td>
+                            </tr>
+                             
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        
+            <div class=" rounded border border-gray-800 shadow-lg  max-h-[65vh]">
+                <div class="p-4 border-b border-gray-700">
+                    <h3 class="text-lg font-bold flex items-center gap-2"><i
+                            class="fas fa-exclamation-triangle text-red-400"></i>TOP 5 MOST FAULTY DEVICES
+
+</h3>
+                </div>
+                <div class="">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gradient-to-r from-gray-800 via-gray-700 to-gray-900 p-4 rounded-xl shadow-lg">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-gray-300">Device Name</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Team</th>
+                                <th class="px-4 py-3 text-left text-gray-300">Number of failures</th>
+                            </tr>
+                        </thead>
+                        <tbody id="priorityRequestsTableBody" class="divide-y divide-gray-700">
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Device A</td>
+                                <td class="px-4 py-3">Pending</td>
+                                <td class="px-4 py-3">2 </td>
+                            </tr>
+        
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Device B</td>
+                                <td class="px-4 py-3">InProgress</td>
+                                <td class="px-4 py-3">1 </td>
+                            </tr>
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Device C</td>
+                                <td class="px-4 py-3">InProgress</td>
+                                <td class="px-4 py-3">1 </td>
+                            </tr>
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Device D</td>
+                                <td class="px-4 py-3">InProgress</td>
+                                <td class="px-4 py-3">1 </td>
+                            </tr>
+                            <tr class="hover:bg-gray-700 transition">
+                                <td class="px-4 py-3">Device E</td>
+                                <td class="px-4 py-3">InProgress</td>
+                                <td class="px-4 py-3">1 </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- DASHBOAR -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 px-4 py-2 w-full -mt-1">
+            <div class="h-[400px]l w-full  ">
+                <div class="glass-card rounded-xl p-2 h-full flex flex-col">
+                    <div class="flex items-center justify-between flex-shrink-0 pb-3">
                         <h4 class="text-white text-xl font-bold flex items-center">
                             <i class="fas fa-chart-line mr-3 text-cyan-400"></i>
-                            Login-TA by Hour
-                        </h4>
+                            TET
+                            </h4>
                         <div class="flex space-x-4 text-sm">
-                            <div class="flex items-center">
+                            <!-- Item01 Button -->
+                            <button
+                                class="legend-btn flex items-center px-3 py-1 rounded-lg transition-all duration-200 hover:opacity-80"
+                                data-dataset="0" style="background-color: rgba(115, 255, 231, 0.1); border: 1px solid #73ffe7;">
                                 <div class="w-3 h-3 bg-cyan-400 rounded-full mr-2"></div>
-                                <span class="text-gray-300">Login</span>
-                            </div>
-                            <div class="flex items-center">
+                                <span class="text-gray-300">Normal TET</span>
+                            </button>
+            
+                            <!-- Item02 Button -->
+                            <button
+                                class="legend-btn flex items-center px-3 py-1 rounded-lg transition-all duration-200 hover:opacity-80"
+                                data-dataset="1" style="background-color: rgba(255, 110, 199, 0.1); border: 1px solid #ff6ec7;">
                                 <div class="w-3 h-3 bg-purple-400 rounded-full mr-2"></div>
-                                <span class="text-gray-300">TA</span>
-                            </div>
+                                <span class="text-gray-300">Priority TET</span>
+                            </button>
+            
+                            <!-- Item03 Button -->
+                            <button
+                                class="legend-btn flex items-center px-3 py-1 rounded-lg transition-all duration-200 hover:opacity-80"
+                                data-dataset="2" style="background-color: rgba(255, 255, 90, 0.1); border: 1px solid #ffff5a;">
+                                <div class="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                                <span class="text-gray-300">KPI</span>
+                            </button>
                         </div>
                     </div>
-                    <div class="h-[calc(100%-22px)] relative">
-                        <canvas class="block" id="loginTaChart"></canvas>
+                    <div class="flex-1 w-full min-h-0 relative ">
+                        <canvas id="loginTaChart"></canvas>
                     </div>
                 </div>
             </div>
-            <!-- Biểu đồ hoạt động nhân viên theo giờ -->
-        <div class="h-full w-full overflow-hidden grid grid-cols-2 gap-4">          
-            <div class="glass-card rounded-xl p-2 h-full">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-white text-xl font-bold flex items-center">
-                                <i class="fas fa-chart-bar mr-3 text-green-400"></i>
-                                Typist - Checker - Logout by Hour
-                            </h4>
-                            <div class="flex space-x-4 text-sm">
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-cyan-400 rounded-full mr-2"></div>
-                                    <span class="text-gray-300">Typist</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-[#FF4785] rounded-full mr-2"></div>
-                                    <span class="text-gray-300">Checker</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-orange-400 rounded-full mr-2"></div>
-                                    <span class="text-gray-300">Logout</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="h-[calc(100%-70px)] relative px-[3px] py-[3px]">
-                            <canvas class="block" id="typistCheckerLogoutChart"></canvas>
-                        </div>
-                        <div class="grid grid-cols-3 gap-1 mt-1 pt-1 border-t border-gray-600">
-                            <div class="text-center">
-                                <div id="totalTypist" class="text-base font-bold text-cyan-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Typist</div>
-                            </div>
-                            <div class="text-center">
-                                <div id="totalChecker" class="text-base font-bold text-purple-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Checker</div>
-                            </div>
-                            <div class="text-center">
-                                <div id="totalLogout" class="text-base font-bold text-orange-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Logout</div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- row 2  -->
-            <div class="glass-card rounded-xl p-2 h-full">
-                        <div class="flex items-center justify-between">
-                            <h4 class="text-white text-xl font-bold flex items-center">
-                                <i class="fas fa-chart-bar mr-3 text-green-400"></i>
-                                Typist - Checker - Logout by Hour
-                            </h4>
-                            <div class="flex space-x-4 text-sm">
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-cyan-400 rounded-full mr-2"></div>
-                                    <span class="text-gray-300">Typist</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-[#FF4785] rounded-full mr-2"></div>
-                                    <span class="text-gray-300">Checker</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-3 h-3 bg-orange-400 rounded-full mr-2"></div>
-                                    <span class="text-gray-300">Logout</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="h-[calc(100%-70px)] relative px-[3px] py-[3px]">
-                            <canvas class="block" id="typistCheckerLogoutChart"></canvas>
-                        </div>
-                        <div class="grid grid-cols-3 gap-1 mt-1 pt-1 border-t border-gray-600">
-                            <div class="text-center">
-                                <div id="totalTypist" class="text-base font-bold text-cyan-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Typist</div>
-                            </div>
-                            <div class="text-center">
-                                <div id="totalChecker" class="text-base font-bold text-purple-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Checker</div>
-                            </div>
-                            <div class="text-center">
-                                <div id="totalLogout" class="text-base font-bold text-orange-400">
-                                    0
-                                </div>
-                                <div class="text-xs text-gray-400">Total Logout</div>
-                            </div>
-                        </div>
-                    </div>
 
-                </div>
+
+            <div class="h-[400px] w-full  ">
+                <div class="glass-card rounded-xl p-2 h-full">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-white text-xl font-bold flex items-center">
+                            <i class="fas fa-chart-pie mr-3 text-cyan-400"></i>
+                            Cost per Lab
+                        </h4>
+                        <!--  BUTTON CONTAINER (BÊN NGOÀI GLASS CARD) -->
+                        <div class="flex gap-3 justify-center flex-wrap mt-4">
+                            <button
+                                class="px-4 py-2.5 rounded-md border-2 border-cyan-400 bg-white/5 text-cyan-400 cursor-pointer text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-400/50 active bar-btn btn-1"
+                                data-index="0">
+                                <span class="inline-block w-2 h-2 bg-cyan-400 rounded-full mr-1.5"></span>Item 01
+                            </button>
+                            <button
+                                class="px-4 py-2.5 rounded-md border-2 border-cyan-300 bg-white/5 text-cyan-300 cursor-pointer text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-300/50 active bar-btn btn-2"
+                                data-index="1">
+                                <span class="inline-block w-2 h-2 bg-cyan-300 rounded-full mr-1.5"></span>Item 02
+                            </button>
+                            <button
+                                class="px-4 py-2.5 rounded-md border-2 border-cyan-200 bg-white/5 text-cyan-200 cursor-pointer text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-200/50 active bar-btn btn-3"
+                                data-index="2">
+                                <span class="inline-block w-2 h-2 bg-cyan-200 rounded-full mr-1.5"></span>Item 03
+                            </button>
+                            <button
+                                class="px-4 py-2.5 rounded-md border-2 border-purple-400 bg-white/5 text-purple-400 cursor-pointer text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-400/50 active bar-btn btn-4"
+                                data-index="3">
+                                <span class="inline-block w-2 h-2 bg-purple-400 rounded-full mr-1.5"></span>Item 04
+                            </button>
+                            <button
+                                class="px-4 py-2.5 rounded-md border-2 border-white bg-white/5 text-white cursor-pointer text-sm font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-white/50 active bar-btn btn-5"
+                                data-index="4">
+                                <span class="inline-block w-2 h-2 bg-white rounded-full mr-1.5"></span>Item 05
+                            </button>
+                        </div>
+                    </div>
             
-       
-        
-
-        <!-- Right section -->
-     
+                    <!--  PIE CHART CONTAINER -->
+                    <div class="h-[calc(100%-22px)] relative flex items-center justify-center">
+                        <svg id="svgPie" width="100%" height="100%" viewBox="0 0 800 800"
+                            style="max-width: 500px; max-height: 500px;"></svg>
+                    </div>
+            
+                </div>
+            </div>
+            
+            
+        </div>
     </div>
 </div>
 
+
             
-<script>
-    
-</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 
 
     <script>
@@ -440,6 +439,8 @@
 
     <!-- File JS -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/settupdashboard.js') }}"></script>
+
 </body>
 
 </html>
