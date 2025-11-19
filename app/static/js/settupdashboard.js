@@ -193,12 +193,12 @@
     // ============================================
     function createChartData() {
         return {
-            labels: ["2018", "2019", "2020", "2021", "2022", "2023"],
+            labels: ["Evaluation", "Approval", "Quotation", "Approve Quotation", "PR", "PO", "Fixed", "Done"],
             datasets: [
                 {
                     type: 'bar',
-                    label: 'Item01',
-                    data: [100, 200, 250, 220, 180, 370],
+                    label: 'Normal',
+                    data: [1, 2, 1, 5, 10, 7, 6, 0.5],
                     backgroundColor: 'barGradient1',
                     borderWidth: 0,
                     barPercentage: 0.75,
@@ -208,8 +208,8 @@
                 },
                 {
                     type: 'bar',
-                    label: 'Item02',
-                    data: [80, 150, 200, 180, 140, 300],
+                    label: 'Priority',
+                    data: [6, 10, 2, 7, 6, 7, 0.6, 5],
                     backgroundColor: 'barGradient2',
                     borderWidth: 0,
                     barPercentage: 0.75,
@@ -219,8 +219,8 @@
                 },
                 {
                     type: 'line',
-                    label: 'Item03',
-                    data: [5, 10, 20, 30, 15, 40],
+                    label: 'KPI',
+                    data: [1, 0.5, 0.5, 3,0.5, 0.5, 1, 1],
                     borderColor: 'rgba(255,255,90,0)',
                     pointBackgroundColor: 'rgba(255,255,90,1)',
                     pointBorderColor: '#1936b0',
