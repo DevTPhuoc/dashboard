@@ -44,7 +44,6 @@ function setupFilter(idInput, idCheckList, urlApi) {
             cb.disabled = false;
           });
         }
-        
       }
 
       checkboxes.forEach((cb) => {
@@ -98,7 +97,6 @@ function setupFilter(idInput, idCheckList, urlApi) {
             cb.disabled = false;
           });
         }
-        
       }
 
       checkboxes.forEach((cb) => {
@@ -152,7 +150,6 @@ function setupFilter(idInput, idCheckList, urlApi) {
             cb.disabled = false;
           });
         }
-        
       }
 
       checkboxes.forEach((cb) => {
@@ -197,22 +194,32 @@ function getFilterValues() {
   const toDateFilter = document.getElementById("toDateFilter").value;
 
   // Department
-  const departmentChecklistContent = document.getElementById("departmentChecklistContent");
-  const departmentCheckboxes = departmentChecklistContent.querySelectorAll("input[type='checkbox']");
+  const departmentChecklistContent = document.getElementById(
+    "departmentChecklistContent"
+  );
+  const departmentCheckboxes = departmentChecklistContent.querySelectorAll(
+    "input[type='checkbox']"
+  );
   let departmentCheckedValues = Array.from(departmentCheckboxes)
     .filter((cb) => cb.checked)
     .map((cb) => cb.value);
 
   // Team
   const teamChecklistContent = document.getElementById("teamChecklistContent");
-  const teamCheckboxes = teamChecklistContent.querySelectorAll("input[type='checkbox']");
+  const teamCheckboxes = teamChecklistContent.querySelectorAll(
+    "input[type='checkbox']"
+  );
   let teamCheckedValues = Array.from(teamCheckboxes)
     .filter((cb) => cb.checked)
     .map((cb) => cb.value);
 
   // Status
-  const statusChecklistContent = document.getElementById("statusChecklistContent");
-  const statusCheckboxes = statusChecklistContent.querySelectorAll("input[type='checkbox']");
+  const statusChecklistContent = document.getElementById(
+    "statusChecklistContent"
+  );
+  const statusCheckboxes = statusChecklistContent.querySelectorAll(
+    "input[type='checkbox']"
+  );
   const statusCheckedValues = Array.from(statusCheckboxes)
     .filter((cb) => cb.checked)
     .map((cb) => cb.parentElement.textContent.trim());
@@ -250,22 +257,32 @@ function resetFilterUI() {
 
   // Department
   const deptInput = document.getElementById("departmentFilter");
-  const departmentChecklistContent = document.getElementById("departmentChecklistContent");
-  const departmentCheckboxes = departmentChecklistContent.querySelectorAll("input[type='checkbox']");
+  const departmentChecklistContent = document.getElementById(
+    "departmentChecklistContent"
+  );
+  const departmentCheckboxes = departmentChecklistContent.querySelectorAll(
+    "input[type='checkbox']"
+  );
   departmentCheckboxes.forEach((cb) => (cb.checked = false));
   deptInput.value = "";
 
   // Team
   const teamInput = document.getElementById("teamFilter");
   const teamChecklistContent = document.getElementById("teamChecklistContent");
-  const teamCheckboxes = teamChecklistContent.querySelectorAll("input[type='checkbox']");
+  const teamCheckboxes = teamChecklistContent.querySelectorAll(
+    "input[type='checkbox']"
+  );
   teamCheckboxes.forEach((cb) => (cb.checked = false));
   teamInput.value = "";
 
   // Status
   document.getElementById("statusFilter").value = "";
-  const statusChecklistContent = document.getElementById("statusChecklistContent");
-  const statusCheckboxes = statusChecklistContent.querySelectorAll("input[type='checkbox']");
+  const statusChecklistContent = document.getElementById(
+    "statusChecklistContent"
+  );
+  const statusCheckboxes = statusChecklistContent.querySelectorAll(
+    "input[type='checkbox']"
+  );
   statusCheckboxes.forEach((cb) => (cb.checked = false));
 
   // --- Điều chỉnh theo role ---

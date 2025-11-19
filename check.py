@@ -3,8 +3,8 @@ import requests
 def get_info():
     url = "http://127.0.0.1:5003/historyrepair/device_history"
     payload = {
-        "LabId": [4],
-        "TeamId": [10],
+        #  "LabId": [4],
+        #"TeamId": [10],
     }
     response = requests.post(url, json=payload)  # dùng POST + json
     # print(response)
