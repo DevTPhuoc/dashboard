@@ -177,12 +177,12 @@
                     </div>
                     <div class="ml-4">
                         <h3 class="text-sm font-medium text-cyan-200">Total Cost</h3>
-                        <p class="text-2xl font-bold text-white mt-1">5</p>
+                        <p id="totalCostDisplay" class="text-2xl font-bold text-white mt-1"></p>
                     </div>
                 </div>
             </div>
         
-            <!-- Total Teams -->
+            <!-- Total totalTET -->
             <div
                 class="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(0,255,255,0.2)] hover:shadow-[0_0_30px_rgba(0,255,255,0.4)] transition duration-300 glass-card  ">
                 <div class="flex items-center">
@@ -191,12 +191,12 @@
                     </div>
                     <div class="ml-4">
                         <h3 class="text-sm font-medium text-green-300">TET</h3>
-                        <p class="text-2xl font-bold text-white mt-1">15</p>
+                        <p id="totalTET" class="text-2xl font-bold text-white mt-1">15</p>
                     </div>
                 </div>
             </div>
         
-            <!-- Total Devices -->
+            <!-- Total Pending -->
             <div
                 class="bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(128,90,213,0.2)] hover:shadow-[0_0_30px_rgba(128,90,213,0.4)] transition duration-300 glass-card   ">
                 <div class="flex items-center">
@@ -205,13 +205,13 @@
                     </div>
                     <div class="ml-4">
                         <h3 class="text-sm font-medium text-purple-300">Total Pending</h3>
-                        <p class="text-2xl font-bold text-white mt-1">120</p>
+                        <p id="totalPending" class="text-2xl font-bold text-white mt-1">120</p>
                     </div>
                 </div>
             </div>
         
             
-            <!-- HINHA -->
+            <!-- Requests -->
             <div
                 class="bg-gradient-to-br from-[#2a0f0f] via-[#3b1e1e] to-black p-6  rounded-xl shadow-[0_0_20px_rgba(239,68,68,0.2)] hover:shadow-[0_0_30px_rgba(239,68,68,0.4)] transition duration-300 glass-card  ">
                 <div class="flex items-center">
@@ -220,7 +220,7 @@
                     </div>
                     <div class="ml-4">
                         <h3 class="text-sm font-medium text-red-300">Repair Requests</h3>
-                        <p class="text-2xl font-bold text-white mt-1">45</p>
+                        <p id="totalRequest" class="text-2xl font-bold text-white mt-1">45</p>
                     </div>
                 </div>
             </div>
@@ -443,7 +443,7 @@
     </script>
 
     <!-- File JS -->
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script> -->
         <script src="{{ url_for('static', filename='js/settupdashboard.js') }}"></script>
 
 </body>

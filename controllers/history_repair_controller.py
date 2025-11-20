@@ -21,7 +21,6 @@ def create_blueprint():
     def device_history():
         filters = request.get_json() or {}
         query = RepairRequest.query
-        print(query)
         if filters.get("isQuotation") and filters["isQuotation"]:
             query = query.join(Approval, and_(Approval.RequestID == RepairRequest.id, Approval.Status != "Rejected"))
 
@@ -43,6 +42,8 @@ def create_blueprint():
             query = query.join(Team, RepairRequest.TeamID == Team.id).filter(Team.id.in_(filters["TeamId"]))
         if filters.get("status") and filters["status"][0] and filters["status"][0] != "":
             query = query.filter(RepairRequest.Status.in_(filters["status"]))
+        from_date = None
+        to_date = None    
         if filters.get("FromDate") and filters["FromDate"][0] and filters["FromDate"][0] != "":
             from_date = datetime.strptime(filters["FromDate"][0], "%Y-%m-%d")
             query = query.filter(RepairRequest.RequestDate >= from_date)
@@ -51,40 +52,58 @@ def create_blueprint():
             query = query.filter(RepairRequest.RequestDate < to_date)
 
         results = query.all()
-        print("results")
 
         data = []
-        for req in results:
-            device = Device.query.get(req.DeviceID)
-            lab = Lab.query.get(req.LabID)
-            team = Team.query.get(req.TeamID)
-            user = User.query.get(req.RequestedBy)
-           #  xử lý total cost
-            cost_query = db.session.query(func.sum(RepairHistory.Cost))
+        # for req in results:
+        #     device = Device.query.get(req.DeviceID)
+        #     lab = Lab.query.get(req.LabID)
+        #     team = Team.query.get(req.TeamID)
+        #     user = User.query.get(req.RequestedBy)
+        
+       
+        
+            # --- tính tổng chi phí một lần ---
+        total_costs = db.session.query(func.sum(RepairHistory.Cost)) \
+            .join(RepairRequest, RepairHistory.RequestID == RepairRequest.id)
+        total_pendings = db.session.query(func.count(RepairRequest.id)) \
+            .filter(RepairRequest.Status!="Done")
+    
+        total_request=db.session.query(func.count(RepairRequest.id))
+        team_filter=filters.get("TeamId") and filters["TeamId"]
+        lab_filter=filters.get("LabId") and filters["LabId"]
+        #FILLTER THEO LAB
+        if team_filter:
+            total_costs = total_costs.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+            total_pendings = total_pendings.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+            total_request=total_request.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+        if lab_filter :
+            total_costs = total_costs.filter(RepairRequest.LabID.in_(filters["LabId"]))
+            total_pendings = total_pendings.filter(RepairRequest.LabID.in_(filters["LabId"]))
+            total_request = total_request.filter(RepairRequest.LabID.in_(filters["LabId"]))
+        
+        # # filter theo ngày
+        # if from_date:
+        #     from_date_str = from_date.strftime("%Y-%m-%d")
+        #     total_costs = total_costs.filter(RepairHistory.RepairDate >= from_date_str)
+        #     total_pendings = total_pendings.filter(RepairRequest.RequestDate >= from_date)
+        #     total_request  = total_request.filter(RepairRequest.RequestDate >= from_date)
+        # if to_date:
+        #     to_date_str = (to_date - timedelta(days=1)).strftime("%Y-%m-%d")
+        #     total_costs = total_costs.filter(RepairHistory.RepairDate <= to_date_str)
+        #     total_pendings = total_pendings.filter(RepairRequest.RequestDate < to_date)
+        #     total_request  = total_request.filter(RepairRequest.RequestDate < to_date)
+            
+        grand_total = total_costs.scalar() or 0
+        grand_total_pendings = total_pendings.scalar() or 0
+        grand_total_requests=total_request.scalar() or 0
 
-            # join với RepairHistory theo RequestID
-            cost_query = cost_query.filter(RepairHistory.RequestID == req.id)
-
-            # nếu có filter TeamId
-            if filters.get("TeamId") and filters["TeamId"][0]:
-                cost_query = cost_query.join(RepairRequest, RepairHistory.RequestID == RepairRequest.id)\
-                                    .filter(RepairRequest.TeamID.in_(filters["TeamId"]))
-
-            # nếu có filter LabId (nhưng không có TeamId)
-            elif filters.get("LabId") and filters["LabId"][0]:
-                cost_query = cost_query.join(RepairRequest, RepairHistory.RequestID == RepairRequest.id)\
-                                    .filter(RepairRequest.LabID.in_(filters["LabId"]))
-
-            total_cost = cost_query.scalar() or 0
-
-            data.append({
-                "RequestID": req.id,
-                "DeviceName": device.DeviceName if device else None,
-                "LabName": lab.LabName if lab else None,
-                "TeamName": team.TeamName if team else None,
-                "TotalCost": total_cost
-            })
-        return jsonify(data)
+        # append thêm tổng chi phí vào mảng data
+        data.append({
+            "TotalCost": grand_total,
+            "total_pendings": grand_total_pendings,
+            "total_requests": grand_total_requests
+        })
+        return jsonify(data), 200
     # def device_history():
     #     try:
     #         # Lấy tham số từ query string
