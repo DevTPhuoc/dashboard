@@ -7,5 +7,6 @@ BeautifulSoup4
 altair
 requests
 pandas
+pyproject.toml
 # selenium
 # %LOCALAPPDATA%\Temp\gen_py

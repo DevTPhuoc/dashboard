@@ -984,7 +984,7 @@ document.getElementById("clearFilter").addEventListener("click", function () {
 async function loadTotalCost() {
   const filters = getFilterValues(); // lấy filter từ UI nếu có
 
-  const response = await fetch("/historyrepair/device_history", {
+  const response = await fetch("/repair_request/device_history", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -1026,8 +1026,44 @@ async function loadTotalCost() {
       totalRequestElement.textContent = totalObj.total_requests.toLocaleString();
     }
   }
-}
+  const top5Obj = data.find((item)=>item.top5_devices != undefined);
+  if (top5Obj && top5Obj.top5_devices) {
+    const tbody = document.getElementById("topDevicesTableBody");
+    if (tbody) {
+      tbody.innerHTML = ""; // clear cũ
+      top5Obj.top5_devices.forEach(device => {
+        const row = document.createElement("tr");
+        row.className = "hover:bg-gray-700 transition";
+        row.innerHTML = `
+          <td class="px-3 py-2 border-gray-600 border">${device.DeviceName}</td>
+          <td class="px-3 py-2 border-gray-600 border">${device.DeviceCode}</td>
 
+          <td class="px-3 py-2 border-gray-600 border">${device.RepairCount}</td>
+          <td class="px-3 py-2 border-gray-600 border">  ${device.TotalCost ? device.TotalCost.toLocaleString() : "0"}</td>
+          <td class="px-3 py-2 border-gray-600 border">${device.Lab}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }}
+    const top5faultyobj = data.find((item)=>item.top5_faulty != undefined);
+  if (top5faultyobj && top5faultyobj.top5_faulty) {
+    const tbody = document.getElementById("topFaultyBody");
+    if (tbody) {
+      tbody.innerHTML = ""; // clear cũ
+      top5faultyobj.top5_faulty.forEach(device1 => {
+        const row = document.createElement("tr");
+        row.className = "hover:bg-gray-700 transition";
+        row.innerHTML = `
+          <td class="px-3 py-2 border-gray-600 border">${device1.DeviceName}</td>
+          <td class="px-3 py-2 border-gray-600 border">${device1.DeviceCode}</td>
+
+          <td class="px-3 py-2 border-gray-600 border">${device1.Team}</td>
+          <td class="px-3 py-2 border-gray-600 border">${device1.RepairCountFaulty}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }}
+}
 // gọi khi trang load
 document.addEventListener("DOMContentLoaded", () => {
   loadTotalCost();

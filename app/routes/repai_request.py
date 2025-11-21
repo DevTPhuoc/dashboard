@@ -1,6 +1,6 @@
 from warnings import filters
 from flask import Blueprint, json, jsonify, request
-from models.models import RepairRequest, Device, Quotation, QuoteOption,PA, RepairStatusHistory, Team, Lab, Status, QuotationHistory, Approval,DisposalDocument
+from models.models import RepairHistory, RepairRequest, Device, Quotation, QuoteOption,PA, RepairStatusHistory, Team, Lab, Status, QuotationHistory, Approval,DisposalDocument
 from app.models import User
 from app import db
 from app.routes import auth 
@@ -1297,259 +1297,165 @@ def download_disposal_document(request_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-# Trong file routes/repair_requests.py (nơi chứa repair_request_bp)
-@repair_request_bp.route("/dashboard/overview", methods=["POST", "GET"])
-def get_dashboard_overview():
-    """API tổng quan dashboard duy nhất với filtering"""
-    try:
-        print("=== DASHBOARD OVERVIEW REQUEST ===")
-        print(f"Request method: {request.method}")
-        print(f"Request URL: {request.url}")
+@repair_request_bp.route("/device_history", methods=["POST"])
+def device_history():
+        filters = request.get_json() or {}
+        query = RepairRequest.query
+        if filters.get("isQuotation") and filters["isQuotation"]:
+            query = query.join(Approval, and_(Approval.RequestID == RepairRequest.id, Approval.Status != "Rejected"))
+
+        if filters.get("id") and filters["id"][0] and filters["id"][0] != "":
+            query = query.filter(RepairRequest.id.in_(filters["id"]))
+        if filters.get("DeviceName") and filters["DeviceName"][0] and filters["DeviceName"][0] != "":
+            device_names = [name for name in filters["DeviceName"] if name]
+            query = query.join(Device, RepairRequest.DeviceID == Device.id).filter(
+                or_(*[Device.DeviceName.ilike(f"%{name}%") for name in device_names])
+            )
+        if filters.get("RequestedBy") and filters["RequestedBy"][0] and filters["RequestedBy"][0] != "":
+            requested_by_names = [name for name in filters["RequestedBy"] if name]
+            query = query.filter(
+                or_(*[RepairRequest.RequestedBy.ilike(f"%{name}%") for name in requested_by_names])
+            )
+        if filters.get("LabId") and filters["LabId"][0]:
+            query = query.join(Lab, RepairRequest.LabID == Lab.id).filter(Lab.id.in_(filters["LabId"]))
+        if filters.get("TeamId") and filters["TeamId"][0]:
+            query = query.join(Team, RepairRequest.TeamID == Team.id).filter(Team.id.in_(filters["TeamId"]))
+        if filters.get("status") and filters["status"][0] and filters["status"][0] != "":
+            query = query.filter(RepairRequest.Status.in_(filters["status"]))
+        from_date = None
+        to_date = None    
+        if filters.get("FromDate") and filters["FromDate"][0] and filters["FromDate"][0] != "":
+            from_date = datetime.strptime(filters["FromDate"][0], "%Y-%m-%d")
+            query = query.filter(RepairRequest.RequestDate >= from_date)
+        if filters.get("ToDate") and filters["ToDate"][0] and filters["ToDate"][0] != "":
+            to_date = datetime.strptime(filters["ToDate"][0], "%Y-%m-%d") + timedelta(days=1)
+            query = query.filter(RepairRequest.RequestDate < to_date)
+
+        results = query.all()
+
+        data = []
+        # for req in results:
+        #     device = Device.query.get(req.DeviceID)
+        #     lab = Lab.query.get(req.LabID)
+        #     team = Team.query.get(req.TeamID)
+        #     user = User.query.get(req.RequestedBy)
         
-        # Xử lý cả GET và POST requests
-        if request.method == 'GET':
-            filters = {}
-            print("GET request received for dashboard")
-        else:
-            filters = request.get_json() or {}
-            print("POST request received with filters:", filters)
-        
-        # Base queries với filters
-        device_query = apply_device_filters(Device.query, filters)
-        repair_query = apply_repair_filters(RepairRequest.query, filters)
-        
-        # 1. Tổng số lab, team, thiết bị
-        total_labs = Lab.query.count()
-        total_teams = Team.query.count()
-        total_devices = device_query.count()
-        
-        print(f"Stats - Labs: {total_labs}, Teams: {total_teams}, Devices: {total_devices}")
-        
-        # 2. Trạng thái thiết bị
-        device_status_stats = device_query.with_entities(
-            Device.Status,
-            func.count(Device.id).label('count')
-        ).group_by(Device.Status).all()
-        device_status_summary = {status: count for status, count in device_status_stats}
-        print(f"Device status: {device_status_summary}")
-        
-        # 3. Trạng thái yêu cầu sửa chữa
-        repair_status_stats = repair_query.with_entities(
-            RepairRequest.Status,
-            func.count(RepairRequest.id).label('count')
-        ).group_by(RepairRequest.Status).all()
-        repair_status_summary = {status: count for status, count in repair_status_stats}
-        total_repair_requests = sum(count for status, count in repair_status_stats)
-        print(f"Repair status: {repair_status_summary}")
-        
-        # 4. Chi phí sửa chữa
-        cost_stats = device_query.with_entities(
-            func.coalesce(func.sum(Device.TotalRepairCost), 0).label('total_cost'),
-            func.coalesce(func.avg(Device.TotalRepairCost), 0).label('avg_cost'),
-            func.coalesce(func.sum(Device.TotalRepairCount), 0).label('total_repairs')
-        ).first()
-        
-        # 5. Thống kê theo lab/team
-        lab_stats = db.session.query(
-            Lab.id,
-            Lab.LabName,
-            func.count(Device.id).label('device_count'),
-            func.count(RepairRequest.id).label('repair_count'),
-            func.coalesce(func.sum(Device.TotalRepairCost), 0).label('total_cost')
-        ).join(Team, Lab.id == Team.LabID)\
-         .join(Device, Team.id == Device.TeamID)\
-         .outerjoin(RepairRequest, Device.id == RepairRequest.DeviceID)\
-         .group_by(Lab.id, Lab.LabName).all()
-        
-        lab_summary = [
-            {
-                'lab_id': lab_id,
-                'lab_name': lab_name,
-                'device_count': device_count,
-                'repair_count': repair_count,
-                'total_cost': float(total_cost or 0)
-            }
-            for lab_id, lab_name, device_count, repair_count, total_cost in lab_stats
-        ]
-        
-        # 6. Top thiết bị hỏng nhiều nhất
-        top_repair_devices = device_query.with_entities(
+       
+        # --- top 5 thiết bị mắc nhất ---
+        top_devices_query = db.session.query(
             Device.DeviceName,
-            Device.TotalRepairCount,
-            Device.TotalRepairCost,
+            Lab.LabName,
+            Device.DeviceCode,
+            func.count(RepairHistory.DeviceID).label("RepairCount"),
             Team.TeamName,
-            Lab.LabName
-        ).join(Team, Device.TeamID == Team.id)\
-         .join(Lab, Team.LabID == Lab.id)\
-         .filter(Device.TotalRepairCount > 0)\
-         .order_by(Device.TotalRepairCount.desc())\
-         .limit(10).all()
+            func.sum(RepairHistory.Cost).label("TotalCost")
+        ).join(RepairRequest, RepairHistory.RequestID == RepairRequest.id) \
+        .join(Device, RepairHistory.DeviceID == Device.id)\
+        .join(Lab, RepairRequest.LabID==Lab.id)\
+        .join(Team,RepairRequest.TeamID==Team.id)
+        # Query cho top theo số lần hỏng
+        top_devices_query_count = db.session.query(
+            Device.DeviceName,
+            Lab.LabName,
+            Device.DeviceCode,
+            Team.TeamName,
+          
+            func.count(RepairHistory.DeviceID).label("RepairCountFaulty"),
+        ).join(RepairRequest, RepairHistory.RequestID == RepairRequest.id) \
+        .join(Device, RepairHistory.DeviceID == Device.id) \
+        .join(Lab, RepairRequest.LabID == Lab.id) \
+        .join(Team, RepairRequest.TeamID == Team.id)
+            # --- tính tổng chi phí một lần ---id
+        total_costs = db.session.query(func.sum(RepairHistory.Cost)) \
+            .join(RepairRequest, RepairHistory.RequestID == RepairRequest.id)
+        total_pendings = db.session.query(func.count(RepairRequest.id)) \
+            .filter(RepairRequest.Status!="Done")
+    
+        total_request=db.session.query(func.count(RepairRequest.id))
+        team_filter=filters.get("TeamId") and filters["TeamId"]
+        lab_filter=filters.get("LabId") and filters["LabId"]
         
-        top_devices_summary = [
-            {
-                'device_name': device_name or "Unknown",
-                'repair_count': repair_count or 0,
-                'total_cost': float(total_cost or 0),
-                'team_name': team_name or "Unknown",
-                'lab_name': lab_name or "Unknown"
-            }
-            for device_name, repair_count, total_cost, team_name, lab_name in top_repair_devices
-        ]
-        
-        # 7. Dữ liệu mẫu cho status analysis (tạm thời)
-        status_analysis = {
-            'status_durations': {
-                'Pending': {'average_days': 2.5, 'request_count': 8, 'max_days': 5, 'min_days': 1, 'total_days': 20},
-                'InProgress': {'average_days': 3.2, 'request_count': 12, 'max_days': 7, 'min_days': 1, 'total_days': 38.4},
-                'Completed': {'average_days': 1.8, 'request_count': 15, 'max_days': 4, 'min_days': 1, 'total_days': 27}
-            },
-            'longest_pending_status': {
-                'status': 'InProgress',
-                'average_days': 3.2
-            }
-        }
-        
-        # 8. Yêu cầu theo độ ưu tiên
-        priority_stats = repair_query.with_entities(
-            RepairRequest.Priority,
-            func.count(RepairRequest.id).label('count')
-        ).group_by(RepairRequest.Priority).all()
-        
-        priority_summary = {
-            'high_priority': next((count for priority, count in priority_stats if priority == True), 0),
-            'normal_priority': next((count for priority, count in priority_stats if priority == False), 0)
-        }
-        
-        # 9. Hiệu suất kỹ thuật viên
-        tech_performance = repair_query.with_entities(
-            RepairRequest.TechName,
-            func.count(RepairRequest.id).label('total_requests'),
-            func.sum(case((RepairRequest.Status == 'Completed', 1), else_=0)).label('completed_count')
-        ).filter(RepairRequest.TechName.isnot(None))\
-         .group_by(RepairRequest.TechName)\
-         .order_by(func.count(RepairRequest.id).desc())\
-         .limit(10).all()
-        
-        tech_summary = [
-            {
-                'tech_name': tech_name or "Unknown Technician",
-                'total_requests': total_requests,
-                'completed_requests': completed_count or 0,
-                'completion_rate': round((completed_count / total_requests * 100), 2) if total_requests > 0 else 0
-            }
-            for tech_name, total_requests, completed_count in tech_performance
-        ]
-        
-        # 10. Yêu cầu gần đây (7 ngày)
-        seven_days_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-        recent_requests = repair_query.filter(RepairRequest.RequestDate >= seven_days_ago).count()
-        
-        # 11. Thống kê TAT (Turn Around Time)
-        tat_stats = {
-            'average_tat': 2.5,
-            'max_tat': 10,
-            'min_tat': 1,
-            'total_analyzed': total_repair_requests
-        }
-        
-        response_data = {
-            'summary': {
-                'total_labs': total_labs,
-                'total_teams': total_teams,
-                'total_devices': total_devices,
-                'total_repair_requests': total_repair_requests,
-                'recent_requests_7_days': recent_requests,
-                'total_repair_cost': float(cost_stats.total_cost or 0),
-                'average_repair_cost': round(float(cost_stats.avg_cost or 0), 2),
-                'total_repair_count': cost_stats.total_repairs or 0,
-                'high_priority_requests': priority_summary['high_priority']
-            },
-            'device_status': device_status_summary,
-            'repair_status': repair_status_summary,
-            'priority_breakdown': priority_summary,
-            'lab_statistics': lab_summary,
-            'top_repair_devices': top_devices_summary,
-            'status_timing_analysis': status_analysis,
-            'technician_performance': tech_summary,
-            'tat_analysis': tat_stats,
-            'filters_applied': filters,
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
-        print("✅ Dashboard response sent successfully")
-        return jsonify(response_data)
-        
-    except Exception as e:
-        print(f"❌ Error in dashboard overview: {str(e)}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({
-            'error': str(e),
-            'message': 'Dashboard data loading failed',
-            'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }), 500
+        #FILLTER THEO LAB
+        if team_filter:
+            total_costs = total_costs.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+            total_pendings = total_pendings.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+            total_request=total_request.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+            #thiet bi mac nhat 
+            top_devices_query = top_devices_query.filter(RepairRequest.TeamID.in_(filters["TeamId"]))
+            #thiet bi hu nhieu nhat 
+            top_devices_query_count = top_devices_query_count.filter(RepairRequest.TeamID.in_(filters["TeamId"])
+    )
 
-@repair_request_bp.route("/dashboard/test", methods=["GET"])
-def test_dashboard():
-    """Test endpoint để kiểm tra kết nối"""
-    return jsonify({
-        'message': 'Dashboard endpoint is working!',
-        'status': 'success',
-        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'endpoint': '/repair_requests/dashboard/overview'
-    })
+        if lab_filter :
+            total_costs = total_costs.filter(RepairRequest.LabID.in_(filters["LabId"]))
+            total_pendings = total_pendings.filter(RepairRequest.LabID.in_(filters["LabId"]))
+            total_request = total_request.filter(RepairRequest.LabID.in_(filters["LabId"]))
+            #thiet bi mac nhat 
+            top_devices_query = top_devices_query.filter(RepairRequest.LabID.in_(filters["LabId"]))
+            #thiet bi hu nhieu nhat 
+            top_devices_query_count = top_devices_query_count.filter(
+            RepairRequest.LabID.in_(filters["LabId"])
+        )
+        
+        # filter theo ngày
+        if from_date:
+            total_costs = total_costs.filter(RepairHistory.RepairDate >= from_date)
+            total_pendings = total_pendings.filter(RepairRequest.RequestDate >= from_date)
+            total_request  = total_request.filter(RepairRequest.RequestDate >= from_date)
+            #thiet bi mac nhat 
+            top_devices_query = top_devices_query.filter(RepairHistory.RepairDate >= from_date)
+            #thiet bi hu nhieu nhat
+            top_devices_query_count = top_devices_query_count.filter(RepairHistory.RepairDate >= from_date)
 
-# Helper functions
-def apply_device_filters(query, filters):
-    """Áp dụng filters cho device query"""
-    try:
-        if filters.get("LabId") and filters["LabId"]:
-            lab_ids = [int(lab_id) for lab_id in filters["LabId"] if lab_id]
-            if lab_ids:
-                query = query.join(Team, Device.TeamID == Team.id).join(Lab, Team.LabID == Lab.id)\
-                            .filter(Lab.id.in_(lab_ids))
-        
-        if filters.get("TeamId") and filters["TeamId"]:
-            team_ids = [int(team_id) for team_id in filters["TeamId"] if team_id]
-            if team_ids:
-                query = query.join(Team, Device.TeamID == Team.id)\
-                            .filter(Team.id.in_(team_ids))
-        
-        return query
-    except Exception as e:
-        print(f"Error applying device filters: {e}")
-        return query
+        if to_date:
+            total_costs = total_costs.filter(RepairHistory.RepairDate <= to_date)
+            total_pendings = total_pendings.filter(RepairRequest.RequestDate < to_date)
+            total_request  = total_request.filter(RepairRequest.RequestDate < to_date)
+            #thiet bi mac nhat 
+            top_devices_query = top_devices_query.filter(RepairHistory.RepairDate <= to_date)
+            #thiet bi hu nhieu nhat
+            top_devices_query_count = top_devices_query_count.filter(RepairHistory.RepairDate <= to_date)
 
-def apply_repair_filters(query, filters):
-    """Áp dụng filters cho repair query"""
-    try:
-        if filters.get("LabId") and filters["LabId"]:
-            lab_ids = [int(lab_id) for lab_id in filters["LabId"] if lab_id]
-            if lab_ids:
-                query = query.join(Lab, RepairRequest.LabID == Lab.id)\
-                            .filter(Lab.id.in_(lab_ids))
+        #xu ly device
+        top_devices = top_devices_query.group_by(RepairHistory.DeviceID, Device.DeviceName, Lab.LabName, Team.TeamName) \
+                                   .order_by(func.sum(RepairHistory.Cost).desc()) \
+                                   .limit(5).all()  
         
-        if filters.get("TeamId") and filters["TeamId"]:
-            team_ids = [int(team_id) for team_id in filters["TeamId"] if team_id]
-            if team_ids:
-                query = query.join(Team, RepairRequest.TeamID == Team.id)\
-                            .filter(Team.id.in_(team_ids))
-        
-        if filters.get("FromDate") and filters["FromDate"]:
-            try:
-                from_date = datetime.strptime(filters["FromDate"], "%Y-%m-%d")
-                query = query.filter(RepairRequest.RequestDate >= from_date.strftime("%Y-%m-%d %H:%M:%S"))
-            except ValueError:
-                pass
-        
-        if filters.get("ToDate") and filters["ToDate"]:
-            try:
-                to_date = datetime.strptime(filters["ToDate"], "%Y-%m-%d") + timedelta(days=1)
-                query = query.filter(RepairRequest.RequestDate < to_date.strftime("%Y-%m-%d %H:%M:%S"))
-            except ValueError:
-                pass
-        
-        return query
-    except Exception as e:
-        print(f"Error applying repair filters: {e}")
-        return query
+
+
+        top_devices_count = top_devices_query_count.group_by(
+            RepairHistory.DeviceID,
+            Device.DeviceName,
+            Team.TeamName,
+            Lab.LabName,
+            Device.DeviceCode
+        ).order_by(func.count(RepairHistory.DeviceID).desc()).limit(5).all()
+
+
+        top5_list = [{"DeviceName": d.DeviceName, "TotalCost": d.TotalCost,"Lab": d.LabName,
+        "RepairCount": d.RepairCount,"DeviceCode":d.DeviceCode} for d in top_devices]   
+        top5_faulty = [ {
+                "DeviceName": d.DeviceName,
+                "Team": d.TeamName,
+                "Lab": d.LabName,
+                "RepairCountFaulty": d.RepairCountFaulty,
+                "DeviceCode":d.DeviceCode
+            }
+            for d in top_devices_count]
+
+
+        grand_total = total_costs.scalar() or 0
+        grand_total_pendings = total_pendings.scalar() or 0
+        grand_total_requests=total_request.scalar() or 0
+        #tinh top 5 the most expensive 
+
+        # append thêm tổng chi phí vào mảng data
+        data.append({
+            "TotalCost": grand_total,
+            "total_pendings": grand_total_pendings,
+            "total_requests": grand_total_requests,
+            "top5_devices": top5_list,
+            "top5_faulty":top5_faulty
+        })
+        return jsonify(data), 200
+    
